@@ -1,0 +1,31 @@
+._cs_slider {
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+    width: 100%;
+    height: auto;
+    display: block;
+    &__container {
+        touch-action: pan-y;
+        position: relative;
+        height: 100%;
+        top:0;
+        transform: translateX(100%);
+        left:0;
+        font-size: 0;
+        &.trans{
+          transition: .3s;
+        }
+        &__item {
+            display: inline-block;
+            vertical-align: top;
+            height: 100%;
+            position: relative;
+          }
+      }
+}
+._css_flex_full{
+    height: auto; 
+    width: 100%; 
+    display: flex;
+}

@@ -1,0 +1,55 @@
+<div class="_css_flex_full" #sliderHeader [hidden]="sliderHeader?.nativeElement?.children?.length == 0">
+    <ng-content select="[header]"></ng-content>
+    <ng-container *ngTemplateOutlet="config?.arrow?.position == 'header'? arrow : 0"></ng-container>
+</div>
+
+<div    class="_cs_slider__container"
+        [class.trans]="!transOff"
+        [style.width.px]="extendedList.length
+            ? (itemDivCount  * clientWidth) / this.config?.rowCount
+            : clientWidth || 0"
+        [style.transform]="safeTransform"
+        (touchstart)="OnTouchStart($event)"
+        (touchend)="OnTouchEnd($event)"
+        (touchcancel)="OnTouchCancel($event)"
+        (touchmove)="OnTouchMove($event)"
+        (mouseover)="OnMouseOver($event)"
+        (mouseleave)="OnMouseLeave($event)"
+        [hidden]="!showSlider"
+        #sliderContainer>
+    <ng-container *ngIf="dataSource && dataSource.length">
+        <ng-content select="[body]"></ng-content>
+    </ng-container>
+</div>
+
+<div    *ngIf="dataSource?.length && config?.pagination?.show"
+        [ngClass]="config?.pagination?.hostClass">
+    <ng-container *ngFor="let sliderItem of  bulletCount; let sliderItemIndex = index; ">
+        <span   (click)="index = sliderItemIndex + 1"
+                [ngClass]="config?.pagination?.bulletClass"
+                [class.active]="sliderItemIndex + 1 == index"
+                (mouseover)="OnMouseOver($event)"
+                (mouseleave)="OnMouseLeave($event)">
+            <span   class="fa-circle"
+                    [ngClass]="{'fas' : sliderItemIndex + 1  === index,'far' : sliderItemIndex + 1  !== index }">
+            </span>
+        </span>
+    </ng-container>
+</div>
+<ng-container *ngTemplateOutlet="config?.arrow?.position == 'body'? arrow : 0"></ng-container>
+
+<div class="_css_flex_full" #sliderFooter [hidden]="sliderFooter?.nativeElement?.children?.length == 0">
+    <ng-content select="[footer]"></ng-content>
+    <ng-container *ngTemplateOutlet="config?.arrow?.position == 'footer'? arrow : 0"></ng-container>
+</div>
+
+<ng-template #arrow>
+    <ng-container *ngIf="config?.arrow?.show">
+        <div [ngClass]="config?.arrow?.left?.hostClass"  (click)="back(false)">
+            <span [ngClass]="config?.arrow?.left?.iconClass"></span>
+        </div>
+        <div [ngClass]="config?.arrow?.right?.hostClass" (click)="forward(true)">
+            <span [ngClass]="config?.arrow?.right?.iconClass"></span>
+        </div>
+    </ng-container>
+</ng-template>

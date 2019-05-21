@@ -1,0 +1,33 @@
+{
+  "name": "ng-un-slider",
+  "version": "1.1.49",
+  "peerDependencies": {
+    "@angular/common": "^7.2.15",
+    "@angular/core": "^7.2.15"
+  },
+  "main": "bundles/ng-un-slider.umd.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/giojanelidze/ng-un-slider.git"
+  },
+  "keywords": [
+    "ng-un-slider"
+  ],
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/giojanelidze/ng-un-slider/issues"
+  },
+  "author": "giorgi janelidze",
+  "module": "fesm5/ng-un-slider.js",
+  "es2015": "fesm2015/ng-un-slider.js",
+  "esm5": "esm5/ng-un-slider.js",
+  "esm2015": "esm2015/ng-un-slider.js",
+  "fesm5": "fesm5/ng-un-slider.js",
+  "fesm2015": "fesm2015/ng-un-slider.js",
+  "typings": "ng-un-slider.d.ts",
+  "metadata": "ng-un-slider.metadata.json",
+  "sideEffects": false,
+  "dependencies": {
+    "tslib": "^1.9.0"
+  }
+}
