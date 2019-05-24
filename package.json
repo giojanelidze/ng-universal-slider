@@ -1,13 +1,14 @@
 {
   "name": "ng-universal-slider",
-  "version": "1.1.48",
+  "version": "1.1.50",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
     "test": "ng test",
     "lint": "ng lint",
-    "e2e": "ng e2e"
+    "e2e": "ng e2e",
+    "build:publish":"ng build ng-un-slider && npm publish ./dist/ng-un-slider"
   },
   "private": true,
   "dependencies": {

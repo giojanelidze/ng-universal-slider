@@ -17,7 +17,8 @@
           transition: .3s;
         }
         &__item {
-            display: inline-block;
+            display: inline-flex;
+            overflow: hidden;
             vertical-align: top;
             height: 100%;
             position: relative;
