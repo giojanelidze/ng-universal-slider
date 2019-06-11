@@ -18,6 +18,7 @@ import {
 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { deepMerge } from './merge';
+import { SlideEvent, KeyCode, SliderConfigType } from './ng-un-slider.interface';
 
 @Component({
     // tslint:disable-next-line:component-selector
@@ -86,21 +87,23 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit, AfterViewChec
 
     @Output() public outputDataSource: EventEmitter<any[]> = new EventEmitter<any[]>();
     // tslint:disable-next-line:no-output-rename
-    @Output('touchstart') public OnTouchStartEmitter: EventEmitter<TouchEvent> = new EventEmitter<TouchEvent>();
+    @Output('onTouchStart') public OnTouchStartEmitter: EventEmitter<TouchEvent> = new EventEmitter<TouchEvent>();
     // tslint:disable-next-line:no-output-rename
-    @Output('touchend') public OnTouchEndEmitter: EventEmitter<TouchEvent> = new EventEmitter<TouchEvent>();
+    @Output('onTouchend') public OnTouchEndEmitter: EventEmitter<TouchEvent> = new EventEmitter<TouchEvent>();
     // tslint:disable-next-line:no-output-rename
-    @Output('touchcancel') public OnTouchCancelEmitter: EventEmitter<TouchEvent> = new EventEmitter<TouchEvent>();
+    @Output('onTouchCancel') public OnTouchCancelEmitter: EventEmitter<TouchEvent> = new EventEmitter<TouchEvent>();
     // tslint:disable-next-line:no-output-rename
-    @Output('touchmove') public OnTouchMoveEmitter: EventEmitter<TouchEvent> = new EventEmitter<TouchEvent>();
+    @Output('onTouchMove') public OnTouchMoveEmitter: EventEmitter<TouchEvent> = new EventEmitter<TouchEvent>();
     // tslint:disable-next-line:no-output-rename
-    @Output('mouseover') public OnMouseOverEmitter: EventEmitter<Event> = new EventEmitter<Event>();
+    @Output('onMouseOver') public OnMouseOverEmitter: EventEmitter<Event> = new EventEmitter<Event>();
     // tslint:disable-next-line:no-output-rename
-    @Output('mouseleave') public OnMouseLeaveEmitter: EventEmitter<Event> = new EventEmitter<Event>();
+    @Output('onMouseLeave') public OnMouseLeaveEmitter: EventEmitter<Event> = new EventEmitter<Event>();
     // tslint:disable-next-line:no-output-rename
-    @Output('onslidestart') public OnSlideStartEmitter: EventEmitter<SlideEvent> = new EventEmitter<SlideEvent>();
+    @Output('onSlideStart') public OnSlideStartEmitter: EventEmitter<SlideEvent> = new EventEmitter<SlideEvent>();
     // tslint:disable-next-line:no-output-rename
-    @Output('onslideend') public OnSlideEndEmitter: EventEmitter<SlideEvent> = new EventEmitter<SlideEvent>();
+    @Output('onSlideEnd') public OnSlideEndEmitter: EventEmitter<SlideEvent> = new EventEmitter<SlideEvent>();
+    // tslint:disable-next-line:no-output-rename
+    @Output('onChangeDetection') public OnChangeDetection: EventEmitter<any> = new EventEmitter<any>();
 
     public get clientWidth(): number {
         return this.el && this.el.nativeElement ? (this.el.nativeElement as Element).clientWidth : 0;
@@ -356,14 +359,17 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit, AfterViewChec
                     this.resizeDivs(this.index, _up);
                     setTimeout(() => {
                         this.transOff = true;
+                        this.OnChangeDetection.emit();
                         setTimeout(() => {
                             this.index = this.index === 0 ? this.sliderContainerChilds.length / this.config.rowCount - 2 : 1;
                             this.resizeDivs(this.index, _up);
+                            this.OnChangeDetection.emit();
                             setTimeout(() => {
                                 this.transOff = false;
                                 this.resizeDivs(this.index, _up);
                                 this.touchDistance = null;
                                 this.OnSlideEndEmitter.emit(this.getSlideEventsData(<SlideEvent>{}));
+                                this.OnChangeDetection.emit();
                                 resolve(true);
                             }, 10);
                         }, 20);
@@ -471,66 +477,7 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit, AfterViewChec
     // }
 }
 
-enum KeyCode {
-    right = 39,
-    left = 37
-}
 
-export interface SliderConfigType {
-    /**
-     * The amount of time to delay between automatically cycling an item.
-     * If false, carousel will not automatically cycle.
-     */
-    interval?: number;
-    /**
-     * Whether the carousel should react to keyboard events.
-     */
-    keyboard?: boolean;
-    /**
-     * If set to "hover", pauses the cycling of the carousel on mouseenter and resumes the cycling of the carousel on mouseleave.
-     */
-    pause?: 'hover' | boolean;
-    margin?: {
-        position: 'left' | 'right' | 'both' | 'none',
-        size: number
-    };
-    autoplay?: boolean;
-    moveCount?: number;
-    isCircular?: boolean;
-    pagination?: {
-        show: boolean;
-        hostClass?: string;
-        bulletClass?: string;
-    };
-    arrow?: {
-        show?: boolean;
-        position?: 'header' | 'body' /*| 'footer'*/
-        left?: ArrowType;
-        right?: ArrowType;
-    };
-    cellCount?: number;
-    // autoCalculateCellCount?: boolean;
-    rowCount?: number;
-}
 
-export interface ArrowType {
-    hostClass?: string;
-    iconClass?: string;
-}
 
-export interface SlideEvent {
-    moveTo: 'forward' | 'back' | 'undefined';
-    index: {
-        previous?: number;
-        current: number;
-    };
-    activeElement: {
-        previous: ElementRef,
-        current: ElementRef,
-    };
-    page: {
-        active: number;
-        total: number;
-    };
-}
 
