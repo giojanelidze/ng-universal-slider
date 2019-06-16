@@ -176,10 +176,10 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit, AfterViewChec
     private get sliderConteinersDivCount(): Array<number> {
         const countArray = [];
         if (this.isBrowser) {
-            let count = this.sliderContainerChilds && this.sliderContainerChilds.length
+            const count = this.sliderContainerChilds && this.sliderContainerChilds.length
                 ? Math.ceil(this.sliderContainerChilds.length / this.config.cellCount)
                 : 0;
-            count += this.remains ? 1 : 0;
+            // count += this.remains ? 1 : 0;
             for (let index = 0; index < count; index++) {
                 countArray.push(index);
             }
