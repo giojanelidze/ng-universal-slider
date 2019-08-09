@@ -28,8 +28,8 @@ export class AppComponent {
     cellCount: 3,
     isCircular: true,
     autoplay: false,
-    // moveCount: 1,
-    margin: { position: 'both', size: 50 },
+    moveCount: 1,
+    margin: { position: 'left', size: 50 },
     pagination: {
       show: false
     },
@@ -45,5 +45,4 @@ export class AppComponent {
       }
     }
   };
-
 }

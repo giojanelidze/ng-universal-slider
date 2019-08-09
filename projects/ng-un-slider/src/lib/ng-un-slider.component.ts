@@ -244,15 +244,6 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit, AfterViewChec
         }
     }
 
-    @HostListener('window:resize', ['$event'])
-    onResize(event: any) {
-        for (let index = 0; index < this.sliderContainerChilds.length; index++) {
-            this.index === index
-                ? this.resizeDivs(index, true)
-                : this.renderer.setStyle(this.sliderContainerChilds[index], 'width', `${this.clientWidth}px`);
-        }
-    }
-
     @HostListener('keyup', ['$event'])
     onKeyUp(event: KeyboardEvent) {
         if (!this.config.keyboard) { return; }
