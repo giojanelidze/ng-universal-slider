@@ -29,10 +29,10 @@ import { SlideEvent, KeyCode, SliderConfigType } from './ng-un-slider.interface'
 export class NgUnSliderComponent implements OnInit, AfterViewInit, AfterViewChecked {
 
     @Input() class = '';
-    @HostBinding('class')
-    get hostClasses(): string { return [this.class, '_cs_slider'].join(' '); }
-
+    @HostBinding('class') get hostClasses(): string { return [this.class, '_cs_slider'].join(' '); }
     @ViewChild('sliderContainer') _sliderContainer: ElementRef;
+    public sliderContainerWidth = 0;
+    public dataIsReordered = false;
     private _sliderContainerChilds: ElementRef[];
     public get sliderContainerChilds(): ElementRef[] {
         if (!this._sliderContainerChilds) {
@@ -80,6 +80,9 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit, AfterViewChec
     @Input()
     public set config(v: SliderConfigType) {
         deepMerge(this._config, v);
+        if (this._config.margin && this._config.margin.position === 'none' && this._config.margin.size) {
+            this._config.margin.size = 0;
+        }
     }
     public get config(): SliderConfigType {
         return this._config;
@@ -113,28 +116,37 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit, AfterViewChec
         if (!this._correctTransformValue) {
             switch (this.config.margin.position) {
                 case 'left':
-                case 'both':
                     this._correctTransformValue = -this.config.margin.size;
                     break;
-                default:
+                case 'both':
                     this._correctTransformValue = 0;
+                    break;
+                default:
+                    this._correctTransformValue = 0 /*this.index !== 1 ? -(this.config.margin ? this.config.margin.size : 0) : 0*/;
                     break;
             }
         }
         return this._correctTransformValue;
     }
+    private _safeTransform = 0;
+
     public get safeTransform(): any {
-        const correctedValueForMoveCount = this.clientWidth / this.config.cellCount * this.instedIndex;
-        const transformValue = Boolean(this.touchDistance)
-            ? this.index * this.clientWidth + this.correctTransformValue
+        if (!this.dataIsReordered) { return; }
+        const correctedValueForMoveCount = (this.clientWidth - (this.config.margin ? this.config.margin.size : 0))
+            / this.config.cellCount * this.instedIndex;
+        const width = (<any>this.sliderContainerChilds[this.previousIndex]).clientWidth + this.correctTransformValue;
+
+        const defaultCalculationTransform = this.calculateTransformValue(this.index)
+            + (this.config.moveCount > 0 ? correctedValueForMoveCount : 0) + this.correctTransformValue;
+        this._safeTransform = Boolean(this.touchDistance)
+            ? this.index * width
             + (this.config.moveCount > 0 ? correctedValueForMoveCount : 0)
-            : this.index * this.clientWidth + (!this.index ? -this.config.margin.size : this.correctTransformValue)
-            + (this.config.moveCount > 0 ? correctedValueForMoveCount : 0);
+            : defaultCalculationTransform;
 
         const transformString: string = Boolean(this.touchDistance)
-            ? `translateX(calc(-${transformValue}px${this.touchDistance > 0
+            ? `translateX(calc(-${this._safeTransform}px${this.touchDistance > 0
                 ? ' + ' : ' - '} ${Math.abs(this.touchDistance)}px))`
-            : `translateX(${-(transformValue)}px)`;
+            : `translateX(${-(this._safeTransform)}px)`;
         return this.sanitizer.bypassSecurityTrustStyle(transformString);
     }
     private instedIndex = 0; _index = 1; previousIndex = 0;
@@ -176,8 +188,8 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit, AfterViewChec
     private get sliderConteinersDivCount(): Array<number> {
         const countArray = [];
         if (this.isBrowser) {
-            const count = this.sliderContainerChilds && this.sliderContainerChilds.length
-                ? Math.ceil(this.sliderContainerChilds.length / this.config.cellCount)
+            const count = this.dataSource && this.dataSource.length
+                ? Math.ceil(this.dataSource.length / this.config.cellCount) + 2
                 : 0;
             // count += this.remains ? 1 : 0;
             for (let index = 0; index < count; index++) {
@@ -223,6 +235,7 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit, AfterViewChec
     ngAfterViewInit() {
         this.createDivContainers();
         this.resizeDivs(1, true);
+        this.dataIsReordered = true;
     }
 
     ngAfterViewChecked() {
@@ -261,6 +274,11 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit, AfterViewChec
                         && divIndex !== this.itemDivCount - 1) { break; }
                     if (existingItemsCount > 0) { this.renderer.appendChild(div, this.sliderContainerChilds[0]); }
                 }
+                if (div.children.length < this.config.cellCount) {
+                    const width = this.clientWidth - (this.config.margin ? this.config.margin.size : 0);
+                    div.style.width = `${width * (div.children.length / this.config.cellCount)}px`;
+                }
+                this.sliderContainerWidth += Number(String(div.style.width).replace('px', ''));
             }
             this.showSlider = true;
         }
@@ -269,39 +287,42 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit, AfterViewChec
     private getDivElement() {
         const div = this.renderer.createElement('div');
         div.className = '_cs_slider__container__item';
-        div.style.width = `${this.clientWidth}px`;
+        div.style.width = `${this.clientWidth - (this.config.margin ? this.config.margin.size : 0)}px`;
         return div;
     }
 
     private resizeDivs(index: number, up: boolean) {
-        const previousElementWidth = `${this.clientWidth}px`, lastIndex = index + (up ? - 1 : 1);
+
+        // const width = this.clientWidth - (this.config.margin ? this.config.margin.size : 0);
+        //             div.style.width = `${width * (div.children.length / this.config.cellCount)}px`;
+
+
+
+        const previousElementWidth = `${this.clientWidth - (this.config.margin ? this.config.margin.size : 0)}px`,
+            lastIndex = (index + (up ? -1 : 1)) < 0
+                || (index + (up ? -1 : 1)) === this.sliderContainerChilds.length
+                ? 0 : (index + (up ? -1 : 1));
         if (!this.sliderContainerChilds[index] || !this.sliderContainerChilds[lastIndex]) { return; }
-        switch (this.config.margin.position) {
-            case 'left':
-            case 'right': {
-                this.renderer.setStyle(this.sliderContainerChilds[index], 'width', `${this.clientWidth - this.config.margin.size}px`);
-                this.renderer.setStyle(this.sliderContainerChilds[lastIndex], 'width', previousElementWidth);
-            }
-                break;
-            case 'both': {
-                this.renderer.setStyle(this.sliderContainerChilds[index], 'width', `${this.clientWidth - this.config.margin.size * 2}px`);
-                this.renderer.setStyle(this.sliderContainerChilds[lastIndex], 'width', previousElementWidth);
-                if (up === false && lastIndex === this.sliderContainerChilds.length - 1) {
-                    this.renderer.setStyle(this.sliderContainerChilds[0], 'width', previousElementWidth);
-                }
-                if (index === 1) {
-                    this.renderer.setStyle(
-                        this.sliderContainerChilds[this.sliderContainerChilds.length - 1],
-                        'width',
-                        `${this.clientWidth}px`
-                    );
-                }
-            } break;
-            case 'none': {
-                this.renderer.setStyle(this.sliderContainerChilds[index], 'width', `${this.clientWidth}px`);
-            }
-                break;
-        }
+        // switch (this.config.margin.position) {
+        //     case 'both': {
+        //         this.renderer.setStyle(this.sliderContainerChilds[index], 'width', `${this.clientWidth - this.config.margin.size * 2}px`);
+        //         this.renderer.setStyle(this.sliderContainerChilds[lastIndex], 'width', previousElementWidth);
+        //         if (up === false && lastIndex === this.sliderContainerChilds.length - 1) {
+        //             this.renderer.setStyle(this.sliderContainerChilds[0], 'width', previousElementWidth);
+        //         }
+        //         if (index === 1) {
+        //             this.renderer.setStyle(
+        //                 this.sliderContainerChilds[this.sliderContainerChilds.length - 1],
+        //                 'width',
+        //                 previousElementWidth
+        //             );
+        //         }
+        //     } break;
+        //     // case 'none': {
+        //     //     this.renderer.setStyle(this.sliderContainerChilds[index], 'width', `${this.clientWidth}px`);
+        //     // }
+        //     //     break;
+        // }
 
         index === 1
             ? this.renderer.removeClass(this.sliderContainerChilds[this.sliderContainerChilds.length - 1], 'active')
@@ -324,11 +345,19 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit, AfterViewChec
     }
 
     private changeIndexValue(up: boolean) {
-        const i = (this.instedIndex + (up ? this.config.moveCount : -this.config.moveCount)) % this.config.cellCount;
-        if ((up ? i < this.instedIndex : i > this.instedIndex) || !this.config.moveCount) {
+        let i = (this.instedIndex + (up ? this.config.moveCount : -this.config.moveCount)) % this.config.cellCount;
+        if (i === -1) {
             this.calculateIndex(up);
-        } else {
-            this.SetTimeout();
+            i = (<any>this.sliderContainerChilds[this.index]).children.length - 1;
+        } else
+            if ((up ? i < this.instedIndex : i > this.instedIndex) || !this.config.moveCount) {
+                this.calculateIndex(up);
+            } else {
+                this.SetTimeout();
+            }
+        if (i + 1 > (<any>this.sliderContainerChilds[this.index]).children.length) {
+            this.calculateIndex(up);
+            return;
         }
         this.instedIndex = i;
     }
@@ -361,6 +390,10 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit, AfterViewChec
                         this.transOff = true;
                         this.OnChangeDetection.emit();
                         setTimeout(() => {
+                            const _index = this.index === 0 ? this.sliderContainerChilds.length / this.config.rowCount - 2 : 1;
+                            if (_index === this.sliderContainerChilds.length - 2) {
+                                this.resizeDivs(this.sliderContainerChilds.length - 1, _up);
+                            }
                             this.index = this.index === 0 ? this.sliderContainerChilds.length / this.config.rowCount - 2 : 1;
                             this.resizeDivs(this.index, _up);
                             this.OnChangeDetection.emit();
@@ -463,6 +496,15 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit, AfterViewChec
                 total: this.bulletCount.length
             }
         }, source);
+    }
+
+    public calculateTransformValue(index: number): number {
+        let i = 0, result = 0;
+        while (i < index) {
+            result += (<any>this.sliderContainerChilds[i++]).clientWidth;
+        }
+        return result;
+
     }
 
     // private isOutOfViewport(elem: HTMLElement) {

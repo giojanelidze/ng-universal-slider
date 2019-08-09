@@ -5,9 +5,7 @@
 
 <div    class="_cs_slider__container"
         [class.trans]="!transOff"
-        [style.width.px]="extendedList.length
-            ? (itemDivCount  * clientWidth) / this.config?.rowCount
-            : clientWidth || 0"
+        [style.width.px]="sliderContainerWidth"
         [style.transform]="safeTransform"
         (touchstart)="OnTouchStart($event)"
         (touchend)="OnTouchEnd($event)"
