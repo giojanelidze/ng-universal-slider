@@ -212,6 +212,8 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit, AfterViewChec
         this.windowResizeStream
             .pipe(debounceTime(200))
             .subscribe(() => {
+                this.stopSlider = true;
+                this.transOff = true;
                 for (let index = 0; index < this.sliderContainerChilds.length; index++) {
                     let containerWidth = `${this.clientWidth - (this.config.margin ? this.config.margin.size : 0)}px`;
                     if ((<any>this.sliderContainerChilds[index]).children.length < this.config.cellCount) {
@@ -221,6 +223,10 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit, AfterViewChec
                     this.renderer.setStyle(this.sliderContainerChilds[index], 'width', containerWidth);
                     this.OnChangeDetection.emit();
                 }
+                setTimeout(() => {
+                    this.transOff = false;
+                    this.stopSlider = this.config.pause === true;
+                }, 10);
             });
     }
 
