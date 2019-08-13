@@ -19,7 +19,8 @@ import {
 import { DomSanitizer } from '@angular/platform-browser';
 import { deepMerge } from './merge';
 import { SlideEvent, KeyCode, SliderConfigType } from './ng-un-slider.interface';
-
+import { Observable, Subject } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
 @Component({
     // tslint:disable-next-line:component-selector
     selector: 'ng-un-slider',
@@ -199,6 +200,7 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit, AfterViewChec
         return countArray;
     }
     public itemDivCount: number;
+    private windowResizeStream: Subject<any> = new Subject<any>();
 
     constructor(@Inject(PLATFORM_ID) private platformId: string
         , private sanitizer: DomSanitizer
@@ -206,6 +208,19 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit, AfterViewChec
         , public el: ElementRef
         , public cdRef: ChangeDetectorRef) {
         this.isBrowser = isPlatformBrowser(this.platformId);
+
+        this.windowResizeStream
+            .pipe(debounceTime(200))
+            .subscribe(() => {
+                for (let index = 0; index < this.sliderContainerChilds.length; index++) {
+                    let containerWidth = `${this.clientWidth - (this.config.margin ? this.config.margin.size : 0)}px`;
+                    if ((<any>this.sliderContainerChilds[index]).children.length < this.config.cellCount) {
+                        const width = this.clientWidth - (this.config.margin ? this.config.margin.size : 0);
+                        containerWidth = `${width * ((<any>this.sliderContainerChilds[index]).children.length / this.config.cellCount)}px`;
+                    }
+                    this.renderer.setStyle(this.sliderContainerChilds[index], 'width', containerWidth);
+                }
+            });
     }
 
     ngOnInit(): void {
@@ -250,6 +265,11 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit, AfterViewChec
         this.setIndex(event.keyCode === KeyCode.right ? true : (event.keyCode === KeyCode.left ? false : null));
     }
 
+    @HostListener('window:resize', ['$event'])
+    onResize(event: any) {
+        this.windowResizeStream.next(true);
+    }
+
     private createDivContainers() {
         if (this.isBrowser) {
             if (!this.itemDivCount) {
@@ -268,6 +288,9 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit, AfterViewChec
                 if (div.children.length < this.config.cellCount) {
                     const width = this.clientWidth - (this.config.margin ? this.config.margin.size : 0);
                     div.style.width = `${width * (div.children.length / this.config.cellCount)}px`;
+                }
+                if (divIndex === 1) {
+                    this.addVisibleClass(div, true);
                 }
                 this.sliderContainerWidth += Number(String(div.style.width).replace('px', ''));
             }
@@ -315,14 +338,48 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit, AfterViewChec
         //     //     break;
         // }
 
-        index === 1
-            ? this.renderer.removeClass(this.sliderContainerChilds[this.sliderContainerChilds.length - 1], 'active')
-            : lastIndex === this.sliderContainerChilds.length - 1
-                ? this.renderer.removeClass(this.sliderContainerChilds[0], 'active')
-                // tslint:disable-next-line:no-unused-expression
-                : null;
+        // TODO: Move in to method
+        if (index === 1) {
+            this.renderer.removeClass(this.sliderContainerChilds[this.sliderContainerChilds.length - 1], 'active');
+            this.renderer.removeClass(this.sliderContainerChilds[this.sliderContainerChilds.length - 1], 'visible');
+            // this.sliderContainerChilds[this.sliderContainerChilds.length - 1].nativeElement.classList.contains('visible');
+        } else {
+            if (lastIndex === this.sliderContainerChilds.length - 1) {
+                this.renderer.removeClass(this.sliderContainerChilds[0], 'active');
+                this.renderer.removeClass(this.sliderContainerChilds[0], 'visible');
+            }
+        }
         this.renderer.removeClass(this.sliderContainerChilds[lastIndex], 'active');
+        this.renderer.removeClass(this.sliderContainerChilds[lastIndex], 'visible');
         this.renderer.addClass(this.sliderContainerChilds[index], 'active');
+        this.renderer.addClass(this.sliderContainerChilds[index], 'visible');
+        this.removeVisibleClass(this.sliderContainerChilds[lastIndex]);
+        let nextElementIndex = index + Number(Boolean(this.instedIndex));
+        if (nextElementIndex > this.sliderContainerChilds.length - 1) {
+            nextElementIndex = 0;
+        }
+        this.addVisibleClass(this.sliderContainerChilds[nextElementIndex], index === 1 ? true : false);
+    }
+
+    private addVisibleClass(element: any, toAll: boolean = false) {
+        if (toAll) {
+            for (const key in element.children) {
+                if (element.children.hasOwnProperty(key)) {
+                    this.renderer.addClass(element.children[key], 'visible');
+                }
+            }
+        } else {
+            if (this.instedIndex && element.children[this.instedIndex - 1]) {
+                this.renderer.addClass(element.children[this.instedIndex - 1], 'visible');
+            }
+        }
+    }
+    private removeVisibleClass(element: any) {
+        for (const key in element.children) {
+            if (element.children.hasOwnProperty(key)) {
+                this.renderer.removeClass(element.children[key], 'visible');
+            }
+        }
     }
 
     private SetTimeout() {
@@ -508,6 +565,25 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit, AfterViewChec
     //     const any = top || left || bottom || right;
     //     return any;
     // }
+    elementInViewport(el) {
+        let top = el.offsetTop;
+        let left = el.offsetLeft;
+        const width = el.offsetWidth;
+        const height = el.offsetHeight;
+
+        while (el.offsetParent) {
+            el = el.offsetParent;
+            top += el.offsetTop;
+            left += el.offsetLeft;
+        }
+
+        return (
+            top >= window.pageYOffset &&
+            left >= window.pageXOffset &&
+            (top + height) <= (window.pageYOffset + window.innerHeight) &&
+            (left + width) <= (window.pageXOffset + window.innerWidth)
+        );
+    }
 }
 
 

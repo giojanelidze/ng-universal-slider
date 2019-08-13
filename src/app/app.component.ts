@@ -29,7 +29,7 @@ export class AppComponent {
     isCircular: true,
     autoplay: false,
     moveCount: 1,
-    margin: { position: 'left', size: 50 },
+    margin: { position: 'right', size: 
     pagination: {
       show: false
     },
