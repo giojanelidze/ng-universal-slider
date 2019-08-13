@@ -219,6 +219,7 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit, AfterViewChec
                         containerWidth = `${width * ((<any>this.sliderContainerChilds[index]).children.length / this.config.cellCount)}px`;
                     }
                     this.renderer.setStyle(this.sliderContainerChilds[index], 'width', containerWidth);
+                    this.OnChangeDetection.emit();
                 }
             });
     }

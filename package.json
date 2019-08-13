@@ -1,6 +1,6 @@
 {
   "name": "ng-universal-slider",
-  "version": "1.1.55",
+  "version": "1.1.57",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
