@@ -214,15 +214,19 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit, AfterViewChec
             .subscribe(() => {
                 this.stopSlider = true;
                 this.transOff = true;
+                let sliderContainerWidth = 0;
                 for (let index = 0; index < this.sliderContainerChilds.length; index++) {
-                    let containerWidth = `${this.clientWidth - (this.config.margin ? this.config.margin.size : 0)}px`;
+                    let containerWidth = `${this.clientWidth - (this.config.margin ? this.config.margin.size : 0)}`;
                     if ((<any>this.sliderContainerChilds[index]).children.length < this.config.cellCount) {
                         const width = this.clientWidth - (this.config.margin ? this.config.margin.size : 0);
-                        containerWidth = `${width * ((<any>this.sliderContainerChilds[index]).children.length / this.config.cellCount)}px`;
+                        containerWidth = `${width * ((<any>this.sliderContainerChilds[index]).children.length / this.config.cellCount)}`;
                     }
-                    this.renderer.setStyle(this.sliderContainerChilds[index], 'width', containerWidth);
+                    sliderContainerWidth += Number(containerWidth);
+                    this.renderer.setStyle(this.sliderContainerChilds[index], 'width', `${containerWidth}px`);
                     this.OnChangeDetection.emit();
                 }
+                this.sliderContainerWidth = sliderContainerWidth;
+                this.OnChangeDetection.emit();
                 setTimeout(() => {
                     this.transOff = false;
                     this.stopSlider = this.config.pause === true;
