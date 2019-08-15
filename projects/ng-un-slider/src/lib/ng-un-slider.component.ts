@@ -20,7 +20,7 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { deepMerge } from './merge';
 import { SlideEvent, KeyCode, SliderConfigType } from './ng-un-slider.interface';
 import { Observable, Subject } from 'rxjs';
-import { debounceTime } from 'rxjs/operators';
+import { debounceTime, debounce } from 'rxjs/operators';
 @Component({
     // tslint:disable-next-line:component-selector
     selector: 'ng-un-slider',
@@ -148,6 +148,7 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit, AfterViewChec
             ? `translateX(calc(-${this._safeTransform}px${this.touchDistance > 0
                 ? ' + ' : ' - '} ${Math.abs(this.touchDistance)}px))`
             : `translateX(${-(this._safeTransform)}px)`;
+        this.addOrRemoveClass$.next(true);
         return this.sanitizer.bypassSecurityTrustStyle(transformString);
     }
     private instedIndex = 0; _index = 1; previousIndex = 0;
@@ -192,7 +193,6 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit, AfterViewChec
             const count = this.dataSource && this.dataSource.length
                 ? Math.ceil(this.dataSource.length / this.config.cellCount) + 2
                 : 0;
-            // count += this.remains ? 1 : 0;
             for (let index = 0; index < count; index++) {
                 countArray.push(index);
             }
@@ -201,6 +201,7 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit, AfterViewChec
     }
     public itemDivCount: number;
     private windowResizeStream: Subject<any> = new Subject<any>();
+    private addOrRemoveClass$: Subject<any> = new Subject<any>();
 
     constructor(@Inject(PLATFORM_ID) private platformId: string
         , private sanitizer: DomSanitizer
@@ -232,6 +233,10 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit, AfterViewChec
                     this.stopSlider = this.config.pause === true;
                 }, 10);
             });
+
+        this.addOrRemoveClass$
+            .pipe(debounceTime(330))
+            .subscribe(() => this.addOrRemoveClass());
     }
 
     ngOnInit(): void {
@@ -300,9 +305,6 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit, AfterViewChec
                     const width = this.clientWidth - (this.config.margin ? this.config.margin.size : 0);
                     div.style.width = `${width * (div.children.length / this.config.cellCount)}px`;
                 }
-                if (divIndex === 1) {
-                    this.addVisibleClass(div, true);
-                }
                 this.sliderContainerWidth += Number(String(div.style.width).replace('px', ''));
             }
             this.showSlider = true;
@@ -318,16 +320,12 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit, AfterViewChec
 
     private resizeDivs(index: number, up: boolean) {
 
-        // const width = this.clientWidth - (this.config.margin ? this.config.margin.size : 0);
-        //             div.style.width = `${width * (div.children.length / this.config.cellCount)}px`;
-
-
-
         const previousElementWidth = `${this.clientWidth - (this.config.margin ? this.config.margin.size : 0)}px`,
             lastIndex = (index + (up ? -1 : 1)) < 0
                 || (index + (up ? -1 : 1)) === this.sliderContainerChilds.length
                 ? 0 : (index + (up ? -1 : 1));
         if (!this.sliderContainerChilds[index] || !this.sliderContainerChilds[lastIndex]) { return; }
+
         // switch (this.config.margin.position) {
         //     case 'both': {
         //         this.renderer.setStyle(this.sliderContainerChilds[index], 'width', `${this.clientWidth - this.config.margin.size * 2}px`);
@@ -352,46 +350,49 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit, AfterViewChec
         // TODO: Move in to method
         if (index === 1) {
             this.renderer.removeClass(this.sliderContainerChilds[this.sliderContainerChilds.length - 1], 'active');
-            this.renderer.removeClass(this.sliderContainerChilds[this.sliderContainerChilds.length - 1], 'visible');
-            // this.sliderContainerChilds[this.sliderContainerChilds.length - 1].nativeElement.classList.contains('visible');
         } else {
             if (lastIndex === this.sliderContainerChilds.length - 1) {
                 this.renderer.removeClass(this.sliderContainerChilds[0], 'active');
-                this.renderer.removeClass(this.sliderContainerChilds[0], 'visible');
             }
         }
         this.renderer.removeClass(this.sliderContainerChilds[lastIndex], 'active');
-        this.renderer.removeClass(this.sliderContainerChilds[lastIndex], 'visible');
         this.renderer.addClass(this.sliderContainerChilds[index], 'active');
-        this.renderer.addClass(this.sliderContainerChilds[index], 'visible');
-        this.removeVisibleClass(this.sliderContainerChilds[lastIndex]);
-        let nextElementIndex = index + Number(Boolean(this.instedIndex));
-        if (nextElementIndex > this.sliderContainerChilds.length - 1) {
-            nextElementIndex = 0;
-        }
-        this.addVisibleClass(this.sliderContainerChilds[nextElementIndex], index === 1 ? true : false);
     }
 
-    private addVisibleClass(element: any, toAll: boolean = false) {
-        if (toAll) {
-            for (const key in element.children) {
-                if (element.children.hasOwnProperty(key)) {
-                    this.renderer.addClass(element.children[key], 'visible');
-                }
-            }
-        } else {
-            if (this.instedIndex && element.children[this.instedIndex - 1]) {
-                this.renderer.addClass(element.children[this.instedIndex - 1], 'visible');
-            }
-        }
-    }
-    private removeVisibleClass(element: any) {
+    private addVisibleClass(element: any) {
         for (const key in element.children) {
             if (element.children.hasOwnProperty(key)) {
-                this.renderer.removeClass(element.children[key], 'visible');
+                if (this.elementInViewport(element.children[key])) {
+                    this.renderer.addClass(element.children[key], 'visible');
+                } else {
+                    this.renderer.removeClass(element.children[key], 'visible');
+                }
             }
         }
     }
+
+    private addPartialVisibleClass(element: any) {
+        for (const key in element.children) {
+            if (element.children.hasOwnProperty(key)) {
+                if (!this.elementInViewport(element.children[key]) && this.isAnyPartOfElementInViewport(element.children[key])) {
+                    this.renderer.addClass(element.children[key], 'partial-visible');
+                } else {
+                    this.renderer.removeClass(element.children[key], 'partial-visible');
+                }
+            }
+        }
+    }
+
+    private addActiveClass(element: any) {
+        if (this.isAnyPartOfElementInViewport(element)) {
+            this.renderer.addClass(element, 'active');
+        } else {
+            this.renderer.removeClass(element, 'active');
+        }
+
+
+    }
+
 
     private SetTimeout() {
         window.clearInterval(this.timeoutId);
@@ -476,6 +477,15 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit, AfterViewChec
             });
         }
         this.sliderSetIndexIsRuning = false;
+    }
+
+    private addOrRemoveClass() {
+        for (const key in this.sliderContainerChilds) {
+            if (this.sliderContainerChilds.hasOwnProperty(key)) {
+                this.addVisibleClass(this.sliderContainerChilds[key]);
+                this.addPartialVisibleClass(this.sliderContainerChilds[key]);
+            }
+        }
     }
 
     public OnTouchStart($event: TouchEvent) {
@@ -576,25 +586,28 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit, AfterViewChec
     //     const any = top || left || bottom || right;
     //     return any;
     // }
-    elementInViewport(el) {
-        let top = el.offsetTop;
-        let left = el.offsetLeft;
-        const width = el.offsetWidth;
-        const height = el.offsetHeight;
-
-        while (el.offsetParent) {
-            el = el.offsetParent;
-            top += el.offsetTop;
-            left += el.offsetLeft;
-        }
-
+    elementInViewport(el: any) {
+        const rect = el.getBoundingClientRect();
         return (
-            top >= window.pageYOffset &&
-            left >= window.pageXOffset &&
-            (top + height) <= (window.pageYOffset + window.innerHeight) &&
-            (left + width) <= (window.pageXOffset + window.innerWidth)
+            rect.top >= 0 &&
+            rect.left >= 0 &&
+            rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+            rect.right <= (window.innerWidth || document.documentElement.clientWidth)
         );
     }
+    isAnyPartOfElementInViewport(el: any) {
+        const rect = el.getBoundingClientRect();
+        // DOMRect { x: 8, y: 8, width: 100, height: 100, top: 8, right: 108, bottom: 108, left: 8 }
+        const windowHeight = (window.innerHeight || document.documentElement.clientHeight);
+        const windowWidth = (window.innerWidth || document.documentElement.clientWidth);
+
+        // http://stackoverflow.com/questions/325933/determine-whether-two-date-ranges-overlap
+        const vertInView = (rect.top <= windowHeight) && ((rect.top + rect.height) >= 0);
+        const horInView = (rect.left <= windowWidth) && ((rect.left + rect.width) >= 0);
+
+        return (vertInView && horInView);
+    }
+
 }
 
 
