@@ -162,7 +162,7 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit, AfterViewChec
         this._index = value;
     }
 
-    public extendedList: Array<any> = new Array<any>(); transOff = false; showSlider: boolean;
+    public extendedList: Array<any> = new Array<any>(); transOff = true; showSlider: boolean;
 
     private isBrowser: boolean;
     private stopSlider: boolean;
@@ -267,6 +267,7 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit, AfterViewChec
         this.createDivContainers();
         this.resizeDivs(1, true);
         this.dataIsReordered = true;
+        this.transOff = false;
     }
 
     ngAfterViewChecked() {
