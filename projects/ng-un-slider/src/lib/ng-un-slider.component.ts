@@ -267,7 +267,7 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit, AfterViewChec
         this.createDivContainers();
         this.resizeDivs(1, true);
         this.dataIsReordered = true;
-        this.transOff = false;
+        setTimeout(() => this.transOff = false, 100);
     }
 
     ngAfterViewChecked() {
@@ -278,8 +278,8 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit, AfterViewChec
 
     @HostListener('keyup', ['$event'])
     onKeyUp(event: KeyboardEvent) {
-        if (!this.config.keyboard) { return; }
-        this.setIndex(event.keyCode === KeyCode.right ? true : (event.keyCode === KeyCode.left ? false : null));
+        if (!this.config.keyboard && (event.keyCode !== KeyCode.right && event.keyCode !== KeyCode.left)) { return; }
+        this.setIndex(event.keyCode === KeyCode.right ? true : false );
     }
 
     @HostListener('window:resize', ['$event'])
