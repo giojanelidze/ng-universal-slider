@@ -267,7 +267,7 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit, AfterViewChec
         this.createDivContainers();
         this.resizeDivs(1, true);
         this.dataIsReordered = true;
-        setTimeout(() => this.transOff = false, 100);
+        setTimeout(() => this.transOff = false, 500);
     }
 
     ngAfterViewChecked() {
