@@ -11,11 +11,10 @@
               </span>
       </ng-container>
       <ng-container body>
-          <ng-container *ngFor="let sliderItem of outputdataSource">
-            <a  class="_css_p-right--md _css_p-left--md _css_position-r _css_display__b">
-              <img [src]="sliderItem.src" alt="image not found" class="_css_size-w--full _css_size-h-max--200 ">
-            </a>
-          </ng-container>
+          <a  *ngFor="let sliderItem of outputdataSource" 
+              class="_css_p-right--md _css_p-left--md _css_position-r _css_display__b">
+            <img [src]="sliderItem.src" alt="image not found" class="_css_size-w--full _css_size-h-max--200 ">
+          </a>
       </ng-container>
   </ng-un-slider>
   

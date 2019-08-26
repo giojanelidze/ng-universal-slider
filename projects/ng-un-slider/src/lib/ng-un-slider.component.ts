@@ -1,7 +1,6 @@
 import { isPlatformBrowser } from '@angular/common';
 import {
-    AfterViewChecked
-    , AfterViewInit
+    AfterViewInit
     , ChangeDetectorRef
     , Component
     , ElementRef
@@ -15,19 +14,20 @@ import {
     , PLATFORM_ID
     , Renderer2
     , ViewChild
+    , AfterContentChecked
 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
+import { Subject } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
 import { deepMerge } from './merge';
-import { SlideEvent, KeyCode, SliderConfigType } from './ng-un-slider.interface';
-import { Observable, Subject } from 'rxjs';
-import { debounceTime, debounce } from 'rxjs/operators';
+import { KeyCode, SlideEvent, SliderConfigType } from './ng-un-slider.interface';
 @Component({
     // tslint:disable-next-line:component-selector
     selector: 'ng-un-slider',
     templateUrl: './ng-un-slider.component.html',
     styleUrls: ['./ng-un-slider.component.scss']
 })
-export class NgUnSliderComponent implements OnInit, AfterViewInit, AfterViewChecked {
+export class NgUnSliderComponent implements OnInit, AfterViewInit {
 
     @Input() class = '';
     @HostBinding('class') get hostClasses(): string { return [this.class, '_cs_slider'].join(' '); }
@@ -46,7 +46,37 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit, AfterViewChec
     private queue: Array<boolean> = [];
     private sliderSetIndexIsRuning = false;
 
-    @Input() public dataSource: any[];
+    // @Input() public dataSource: any[];
+    public loading = true;
+    private dataSourceIsChanged = false;
+    private _dataSource: any[];
+    public get dataSource(): any[] {
+        return this._dataSource;
+    }
+    @Input()
+    public set dataSource(v: any[]) {
+        if (this._dataSource) {
+            this.initializeDefaultValues();
+            this.removeDivContainers();
+            this._dataSource = v;
+            this.modifyDataSource();
+            this.dataSourceIsChanged = true;
+            this.transOff = true;
+            const observer = new MutationObserver((mutations) => {
+                this.onDataSourceChange();
+                observer.disconnect();
+            });
+
+            observer.observe(this._sliderContainer.nativeElement, {
+                childList: true
+            });
+
+        } else {
+            this._dataSource = v;
+            this.modifyDataSource();
+        }
+    }
+
     private _config: SliderConfigType = {
         autoplay: true,
         interval: 3000,
@@ -239,8 +269,39 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit, AfterViewChec
             .subscribe(() => this.addOrRemoveClass());
     }
 
-    ngOnInit(): void {
+    private initializeDefaultValues() {
+        this.class = '';
+        this.sliderContainerWidth = 0;
+        this.dataIsReordered = false;
+        this._sliderContainerChilds = undefined;
+        this.queue = [];
+        this.sliderSetIndexIsRuning = false;
+        this.loading = false;
+        this._correctTransformValue = undefined;
+        this._safeTransform = 0;
+        this.instedIndex = 0;
+        this._index = 1;
+        this.previousIndex = 0;
+        this.stopSlider = false;
+        this.touchStartX = undefined;
+        this.touchDistance = undefined;
+        this.timeoutId = null;
+        this.lastX = 0;
+        this.remains = 0;
+        this.touchEvent = false;
+        this._bulletCount = undefined;
+        this.itemDivCount = undefined;
+    }
+
+    modifyDataSource(): void {
         this.stopSlider = this._config.pause === true;
+
+        if (!this.config.isCircular && !this.config.autoplay && !this.config.arrow.show) {
+            this.extendedList = JSON.parse(JSON.stringify(this.dataSource));
+            this.outputDataSource.emit(this.extendedList);
+            return;
+        }
+
         const tmpExtendedList: Array<any> = JSON.parse(JSON.stringify(this.dataSource));
         if (tmpExtendedList.length <= this.config.cellCount) {
             this.config.cellCount = tmpExtendedList.length;
@@ -263,28 +324,45 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit, AfterViewChec
         }
     }
 
+    ngOnInit(): void {
+        this.modifyDataSource();
+    }
+
+    AfterViewChecked() {
+        if (this.dataSourceIsChanged) {
+
+        }
+    }
+
     ngAfterViewInit() {
+        this.onDataSourceChange();
+    }
+
+    onDataSourceChange() {
         this.createDivContainers();
         this.resizeDivs(1, true);
         this.dataIsReordered = true;
         setTimeout(() => this.transOff = false, 500);
     }
 
-    ngAfterViewChecked() {
-        if (!this.cdRef['destroyed']) {
-            this.cdRef.detectChanges();
-        }
-    }
-
     @HostListener('keyup', ['$event'])
     onKeyUp(event: KeyboardEvent) {
         if (!this.config.keyboard || (event.keyCode !== KeyCode.right && event.keyCode !== KeyCode.left)) { return; }
-        this.setIndex(event.keyCode === KeyCode.right ? true : false );
+        this.setIndex(event.keyCode === KeyCode.right ? true : false);
     }
 
     @HostListener('window:resize', ['$event'])
     onResize(event: any) {
         this.windowResizeStream.next(true);
+    }
+
+    private removeDivContainers() {
+        while (this.sliderContainerChilds.length) {
+            if (this.sliderContainerChilds.hasOwnProperty(0)) {
+                const element = this.sliderContainerChilds[0];
+                this.renderer.removeChild(this._sliderContainer.nativeElement, element);
+            }
+        }
     }
 
     private createDivContainers() {

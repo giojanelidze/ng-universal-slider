@@ -35,6 +35,7 @@ export class AppComponent {
       show: false
     },
     arrow: {
+      show: true,
       position: 'body',
       right: {
         iconClass: '_css_carousel__arrow--right fas fa-angle-right',
@@ -46,4 +47,13 @@ export class AppComponent {
       }
     }
   };
+
+  constructor() {
+    setTimeout(() => {
+      this.dataSource = [{
+        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
+      }
+      ];
+    }, 1000);
+  }
 }
