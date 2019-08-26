@@ -17,7 +17,7 @@ import {
 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { Subject } from 'rxjs';
-import { debounceTime } from 'rxjs/operators';
+import { debounceTime, tap } from 'rxjs/operators';
 import { deepMerge } from './merge';
 import { KeyCode, SlideEvent, SliderConfigType } from './ng-un-slider.interface';
 @Component({
@@ -68,7 +68,6 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
 
         } else {
             this._dataSource = v;
-            this.modifyDataSource();
         }
     }
 
@@ -254,7 +253,7 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
                 this.sliderContainerWidth = sliderContainerWidth;
                 this.OnChangeDetection.emit();
                 setTimeout(() => {
-                    this.transOff = false;
+                    this.transOff = this.config.isCircular || this.config.autoplay ? false : this.transOff;
                     this.stopSlider = this.config.pause === true;
                 }, 10);
             });
@@ -289,13 +288,6 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
 
     modifyDataSource(): void {
         this.stopSlider = this._config.pause === true;
-
-        if (!this.config.isCircular && !this.config.autoplay && !this.config.arrow.show) {
-            this.extendedList = JSON.parse(JSON.stringify(this.dataSource));
-            this.outputDataSource.emit(this.extendedList);
-            return;
-        }
-
         const tmpExtendedList: Array<any> = JSON.parse(JSON.stringify(this.dataSource));
         if (tmpExtendedList.length <= this.config.cellCount) {
             this.config.cellCount = tmpExtendedList.length;
@@ -315,6 +307,9 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
         this.outputDataSource.emit(this.extendedList);
         if (this.isBrowser && this.config.autoplay) {
             this.SetTimeout();
+        } else {
+            this.dataIsReordered = true;
+            this.OnChangeDetection.emit();
         }
     }
 
@@ -330,7 +325,7 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
         this.createDivContainers();
         this.resizeDivs(1, true);
         this.dataIsReordered = true;
-        setTimeout(() => this.transOff = false, 500);
+        setTimeout(() => this.transOff = this.config.isCircular || this.config.autoplay ? false : this.transOff, 500);
     }
 
     @HostListener('keyup', ['$event'])
@@ -525,7 +520,7 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
                             this.resizeDivs(this.index, _up);
                             this.OnChangeDetection.emit();
                             setTimeout(() => {
-                                this.transOff = false;
+                                this.transOff = this.config.isCircular || this.config.autoplay ? false : this.transOff;
                                 this.resizeDivs(this.index, _up);
                                 this.touchDistance = null;
                                 this.OnSlideEndEmitter.emit(this.getSlideEventsData(<SlideEvent>{}));
@@ -536,7 +531,7 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
                     }, 300);
                 } else {
                     this.resizeDivs(this.index, _up);
-                    this.transOff = false;
+                    this.transOff = this.config.isCircular || this.config.autoplay ? false : this.transOff;
                     this.touchDistance = null;
                     this.OnSlideEndEmitter.emit(this.getSlideEventsData(<SlideEvent>{}));
                     resolve(true);
@@ -553,6 +548,7 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
                 this.addPartialVisibleClass(this.sliderContainerChilds[key]);
             }
         }
+        this.OnChangeDetection.emit();
     }
 
     public OnTouchStart($event: TouchEvent) {
@@ -569,7 +565,7 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
         if (Math.abs(touchDistance) > window.innerWidth * .25) {
             this.setIndex(Boolean(touchDistance < 0));
         } else {
-            this.transOff = false;
+            this.transOff = this.config.isCircular || this.config.autoplay ? false : this.transOff;
             this.touchDistance = 0;
         }
         this.OnTouchEndEmitter.emit($event);
