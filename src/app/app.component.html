@@ -4,6 +4,7 @@
               [dataSource]="dataSource" 
               [config]="rSliderConfig"
               (outputDataSource)="outputdataSource = $event"
+              (onChangeDetection)="OnChangeDetection()"
               #slider>
       <ng-container header>
           <span class="_css_carousel__header">

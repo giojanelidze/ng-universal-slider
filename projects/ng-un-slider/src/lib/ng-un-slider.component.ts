@@ -14,7 +14,6 @@ import {
     , PLATFORM_ID
     , Renderer2
     , ViewChild
-    , AfterContentChecked
 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { Subject } from 'rxjs';
@@ -45,14 +44,11 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
     }
     private queue: Array<boolean> = [];
     private sliderSetIndexIsRuning = false;
-
-    // @Input() public dataSource: any[];
-    public loading = true;
-    private dataSourceIsChanged = false;
     private _dataSource: any[];
     public get dataSource(): any[] {
         return this._dataSource;
     }
+    // https://nitayneeman.com/posts/listening-to-dom-changes-using-mutationobserver-in-angular/
     @Input()
     public set dataSource(v: any[]) {
         if (this._dataSource) {
@@ -60,13 +56,12 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
             this.removeDivContainers();
             this._dataSource = v;
             this.modifyDataSource();
-            this.dataSourceIsChanged = true;
             this.transOff = true;
             const observer = new MutationObserver((mutations) => {
                 this.onDataSourceChange();
+                this.OnChangeDetection.emit();
                 observer.disconnect();
             });
-
             observer.observe(this._sliderContainer.nativeElement, {
                 childList: true
             });
@@ -276,7 +271,6 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
         this._sliderContainerChilds = undefined;
         this.queue = [];
         this.sliderSetIndexIsRuning = false;
-        this.loading = false;
         this._correctTransformValue = undefined;
         this._safeTransform = 0;
         this.instedIndex = 0;
@@ -326,12 +320,6 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
 
     ngOnInit(): void {
         this.modifyDataSource();
-    }
-
-    AfterViewChecked() {
-        if (this.dataSourceIsChanged) {
-
-        }
     }
 
     ngAfterViewInit() {

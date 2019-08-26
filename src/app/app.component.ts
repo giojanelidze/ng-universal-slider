@@ -1,12 +1,13 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy, ChangeDetectorRef, AfterViewInit } from '@angular/core';
 import { SliderConfigType } from 'projects/ng-un-slider/src/public_api';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./app.component.scss']
 })
-export class AppComponent {
+export class AppComponent implements AfterViewInit {
   title = 'ng-universal-slider';
 
   dataSource: any[] = [{
@@ -48,12 +49,22 @@ export class AppComponent {
     }
   };
 
-  constructor() {
+  constructor(public cdr: ChangeDetectorRef) {
     setTimeout(() => {
       this.dataSource = [{
         src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
       }
       ];
+      this.cdr.markForCheck();
     }, 1000);
+  }
+
+  ngAfterViewInit() {
+    this.cdr.markForCheck();
+  }
+
+
+  OnChangeDetection() {
+    this.cdr.markForCheck();
   }
 }
