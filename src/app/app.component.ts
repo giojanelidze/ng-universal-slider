@@ -4,7 +4,7 @@ import { SliderConfigType } from 'projects/ng-un-slider/src/public_api';
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  // changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent implements AfterViewInit, OnInit {
@@ -15,11 +15,11 @@ export class AppComponent implements AfterViewInit, OnInit {
 
   rSliderConfig: SliderConfigType = {
     interval: 1000,
-    cellCount: 3,
+    cellCount: 1,
     isCircular: true,
-    autoplay: true,
+    autoplay: false,
     keyboard: true,
-    margin: { position: 'right', size: 50 },
+    // margin: { position: 'right', size: 50 },
     pagination: {
       show: false
     },
@@ -57,11 +57,12 @@ export class AppComponent implements AfterViewInit, OnInit {
     // }];
     // this.cdr.markForCheck();
     setTimeout(() => {
-      const isCircular = false;
+      const isCircular = true;
       this.rSliderConfig = Object.assign(this.rSliderConfig,
-        { isCircular: isCircular, autoplay: isCircular },
-        { arrow: { show: false } });
+        { isCircular: isCircular, autoplay: false });
       this.dataSource = [{
+        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
+      }, {
         src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
       }];
       this.cdr.markForCheck();

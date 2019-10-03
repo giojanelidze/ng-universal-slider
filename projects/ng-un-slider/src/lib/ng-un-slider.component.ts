@@ -20,6 +20,8 @@ import { Subject } from 'rxjs';
 import { debounceTime, tap } from 'rxjs/operators';
 import { deepMerge } from './merge';
 import { KeyCode, SlideEvent, SliderConfigType } from './ng-un-slider.interface';
+import { Queue } from './queue';
+import { Slider } from './slider';
 @Component({
     // tslint:disable-next-line:component-selector
     selector: 'ng-un-slider',
@@ -27,7 +29,6 @@ import { KeyCode, SlideEvent, SliderConfigType } from './ng-un-slider.interface'
     styleUrls: ['./ng-un-slider.component.scss']
 })
 export class NgUnSliderComponent implements OnInit, AfterViewInit {
-
     @Input() class = '';
     @HostBinding('class') get hostClasses(): string { return [this.class, '_cs_slider'].join(' '); }
     @ViewChild('sliderContainer') _sliderContainer: ElementRef;
@@ -42,8 +43,7 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
         }
         return this._sliderContainerChilds;
     }
-    private queue: Array<boolean> = [];
-    private sliderSetIndexIsRuning = false;
+
     private _dataSource: any[];
     public get dataSource(): any[] {
         return this._dataSource;
@@ -71,46 +71,17 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
         }
     }
 
-    private _config: SliderConfigType = {
-        autoplay: true,
-        interval: 3000,
-        keyboard: true,
-        rowCount: 1,
-        margin: {
-            position: 'none',
-            size: 0
-        },
-        isCircular: true,
-        pause: 'hover',
-        moveCount: 0,
-        arrow: {
-            show: true,
-            position: 'body',
-            left: {
-                hostClass: '_cs_slider__arrow _cs_slider__arrow-left',
-                iconClass: 'fas fa-angle-left',
-            },
-            right: {
-                hostClass: '_cs_slider__arrow _cs_slider__arrow-right',
-                iconClass: 'fas fa-angle-right'
-            }
-        },
-        pagination: {
-            show: true,
-            hostClass: '_cs_slider__pagination',
-            bulletClass: '_cs_slider__pagination-bullet'
-        },
-        cellCount: 1
-    };
+
     @Input()
     public set config(v: SliderConfigType) {
-        deepMerge(this._config, v);
-        if (this._config.margin && this._config.margin.position === 'none' && this._config.margin.size) {
-            this._config.margin.size = 0;
+        deepMerge(this.slider.sliderConfig, v);
+        if (this.slider.sliderConfig.margin && this.slider.sliderConfig.margin.position === 'none'
+            && this.slider.sliderConfig.margin.size) {
+            this.slider.sliderConfig.margin.size = 0;
         }
     }
     public get config(): SliderConfigType {
-        return this._config;
+        return this.slider.sliderConfig;
     }
 
     @Output() public outputDataSource: EventEmitter<any[]> = new EventEmitter<any[]>();
@@ -164,8 +135,7 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
         const defaultCalculationTransform = this.calculateTransformValue(this.index)
             + (this.config.moveCount > 0 ? correctedValueForMoveCount : 0) + this.correctTransformValue;
         this._safeTransform = Boolean(this.touchDistance)
-            ? this.index * width
-            + (this.config.moveCount > 0 ? correctedValueForMoveCount : 0)
+            ? this.index * width + (this.config.moveCount > 0 ? correctedValueForMoveCount : 0)
             : defaultCalculationTransform;
 
         const transformString: string = Boolean(this.touchDistance)
@@ -187,6 +157,8 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
     }
 
     public extendedList: Array<any> = new Array<any>(); transOff = true; showSlider: boolean;
+    private queue: Queue = new Queue();
+    private slider: Slider = new Slider();
 
     private isBrowser: boolean;
     private stopSlider: boolean;
@@ -268,8 +240,6 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
         this.sliderContainerWidth = 0;
         this.dataIsReordered = false;
         this._sliderContainerChilds = undefined;
-        this.queue = [];
-        this.sliderSetIndexIsRuning = false;
         this._correctTransformValue = undefined;
         this._safeTransform = 0;
         this.instedIndex = 0;
@@ -287,7 +257,7 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
     }
 
     modifyDataSource(): void {
-        this.stopSlider = this._config.pause === true;
+        this.stopSlider = this.slider.sliderConfig.pause === true;
         const tmpExtendedList: Array<any> = JSON.parse(JSON.stringify(this.dataSource));
         if (tmpExtendedList.length <= this.config.cellCount) {
             this.config.cellCount = tmpExtendedList.length;
@@ -451,8 +421,6 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
         } else {
             this.renderer.removeClass(element, 'active');
         }
-
-
     }
 
 
@@ -463,7 +431,7 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
                 this.OnSlideStartEmitter.emit(this.getSlideEventsData(<SlideEvent>{ moveTo: 'forward' }));
                 this.setIndex(true);
             }
-        }, this._config.interval);
+        }, this.slider.sliderConfig.interval);
     }
 
     private changeIndexValue(up: boolean) {
@@ -499,46 +467,41 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
     }
 
     private async setIndex(up: boolean) {
-        this.queue.push(up);
-        if (this.sliderSetIndexIsRuning) { return; }
-        this.sliderSetIndexIsRuning = true;
-        while (this.queue.length) {
-            const _up = this.queue.shift();
-            const data = await new Promise((resolve, reject) => {
-                this.touchEvent ? this.calculateIndex(_up) : this.changeIndexValue(_up);
-                if (this.index === this.sliderContainerChilds.length / this.config.rowCount - 1 || this.index === 0) {
-                    this.resizeDivs(this.index, _up);
+        this.queue.execute(() => {
+            this.touchEvent ? this.calculateIndex(up) : this.changeIndexValue(up);
+            this.OnChangeDetection.emit();
+            if (this.index === this.sliderContainerChilds.length / this.config.rowCount - 1 || this.index === 0) {
+                this.resizeDivs(this.index, up);
+                this.transOff = Boolean(this.touchDistance) ? this.config.isCircular || this.config.autoplay ? false : this.transOff : this.transOff;
+                this.touchDistance = null;
+                setTimeout(() => {
+                    this.transOff = true;
+                    this.OnChangeDetection.emit();
                     setTimeout(() => {
-                        this.transOff = true;
+                        const _index = this.index === 0 ? this.sliderContainerChilds.length / this.config.rowCount - 2 : 1;
+                        if (_index === this.sliderContainerChilds.length - 2) {
+                            this.resizeDivs(this.sliderContainerChilds.length - 1, up);
+                        }
+                        this.index = this.index === 0 ? this.sliderContainerChilds.length / this.config.rowCount - 2 : 1;
+                        this.resizeDivs(this.index, up);
                         this.OnChangeDetection.emit();
                         setTimeout(() => {
-                            const _index = this.index === 0 ? this.sliderContainerChilds.length / this.config.rowCount - 2 : 1;
-                            if (_index === this.sliderContainerChilds.length - 2) {
-                                this.resizeDivs(this.sliderContainerChilds.length - 1, _up);
-                            }
-                            this.index = this.index === 0 ? this.sliderContainerChilds.length / this.config.rowCount - 2 : 1;
-                            this.resizeDivs(this.index, _up);
+                            this.transOff = this.config.isCircular || this.config.autoplay ? false : this.transOff;
+                            this.resizeDivs(this.index, up);
+                            this.touchDistance = null;
+                            this.OnSlideEndEmitter.emit(this.getSlideEventsData(<SlideEvent>{}));
                             this.OnChangeDetection.emit();
-                            setTimeout(() => {
-                                this.transOff = this.config.isCircular || this.config.autoplay ? false : this.transOff;
-                                this.resizeDivs(this.index, _up);
-                                this.touchDistance = null;
-                                this.OnSlideEndEmitter.emit(this.getSlideEventsData(<SlideEvent>{}));
-                                this.OnChangeDetection.emit();
-                                resolve(true);
-                            }, 10);
-                        }, 20);
-                    }, 300);
-                } else {
-                    this.resizeDivs(this.index, _up);
-                    this.transOff = this.config.isCircular || this.config.autoplay ? false : this.transOff;
-                    this.touchDistance = null;
-                    this.OnSlideEndEmitter.emit(this.getSlideEventsData(<SlideEvent>{}));
-                    resolve(true);
-                }
-            });
-        }
-        this.sliderSetIndexIsRuning = false;
+                        }, 10);
+                    }, 20);
+                }, 300);
+            } else {
+                this.resizeDivs(this.index, up);
+                this.transOff = this.config.isCircular || this.config.autoplay ? false : this.transOff;
+                this.touchDistance = null;
+                this.OnSlideEndEmitter.emit(this.getSlideEventsData(<SlideEvent>{}));
+            }
+        });
+
     }
 
     private addOrRemoveClass() {
@@ -566,9 +529,10 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
             this.setIndex(Boolean(touchDistance < 0));
         } else {
             this.transOff = this.config.isCircular || this.config.autoplay ? false : this.transOff;
-            this.touchDistance = 0;
+            this.touchDistance = null;
         }
         this.OnTouchEndEmitter.emit($event);
+        this.OnChangeDetection.emit();
         this.touchEvent = false;
     }
 
@@ -589,14 +553,14 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
     }
 
     public OnMouseOver($event: Event) {
-        if (this._config.pause === 'hover') {
+        if (this.slider.sliderConfig.pause === 'hover') {
             this.stopSlider = true;
         }
         this.OnMouseOverEmitter.emit($event);
     }
 
     public OnMouseLeave($event: Event) {
-        if (this._config.pause === true) {
+        if (this.slider.sliderConfig.pause === true) {
             return;
         }
         this.stopSlider = false;
@@ -669,6 +633,12 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
         const horInView = (rect.left <= windowWidth) && ((rect.left + rect.width) >= 0);
 
         return (vertInView && horInView);
+    }
+
+
+    test(num: number, str: string): void {
+        console.log('function is called ', num, str);
+
     }
 
 }
