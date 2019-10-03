@@ -124,7 +124,7 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
         }
         return this._correctTransformValue;
     }
-    private _safeTransform = 0;
+    private _safeTransform = 30;
 
     public get safeTransform(): any {
         if (!this.dataIsReordered) { return; }
@@ -474,6 +474,7 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
                 this.resizeDivs(this.index, up);
                 this.transOff = Boolean(this.touchDistance) ? this.config.isCircular || this.config.autoplay ? false : this.transOff : this.transOff;
                 this.touchDistance = null;
+                // TODO: გადასაკეთებელია async await -ად
                 setTimeout(() => {
                     this.transOff = true;
                     this.OnChangeDetection.emit();
@@ -597,7 +598,7 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
     public calculateTransformValue(index: number): number {
         let i = 0, result = 0;
         while (i < index) {
-            result += (<any>this.sliderContainerChilds[i++]).clientWidth;
+            result += Number((<any>this.sliderContainerChilds[i++]).style.width.replace('px',''));
         }
         return result;
 
