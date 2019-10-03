@@ -1,5 +1,5 @@
 import { Stack } from './stack';
-import { Observable, observable } from 'rxjs';
+import { Observable } from 'rxjs';
 import { debounceTime, first } from 'rxjs/operators';
 
 export class Queue {
@@ -23,7 +23,7 @@ export class Queue {
     execute(callback: any, timOut: number = 0) {
         this._queue.push(timOut
             ? new Observable(subscriber => subscriber.next(callback))
-                .pipe<Function>(debounceTime<Function>(timOut))
+                .pipe(debounceTime(timOut))
             : callback
         );
         if (this.state === 'finished') { this.executeFromQueue(); }

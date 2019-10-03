@@ -16,7 +16,7 @@ import {
     , ViewChild
 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
-import { Subject } from 'rxjs';
+import { Subject, Observable } from 'rxjs';
 import { debounceTime, tap } from 'rxjs/operators';
 import { deepMerge } from './merge';
 import { KeyCode, SlideEvent, SliderConfigType } from './ng-un-slider.interface';
@@ -44,6 +44,7 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
         return this._sliderContainerChilds;
     }
 
+    private completed = true;
     private _dataSource: any[];
     public get dataSource(): any[] {
         return this._dataSource;
@@ -466,11 +467,15 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
                 : this.config.isCircular ? this.sliderContainerChilds.length / this.config.rowCount - 2 : this.index;
     }
 
+    
     private async setIndex(up: boolean) {
-        this.queue.execute(() => {
+        if (!this.completed) return;
+
+        this.queue.execute(async () => {
             this.touchEvent ? this.calculateIndex(up) : this.changeIndexValue(up);
             this.OnChangeDetection.emit();
             if (this.index === this.sliderContainerChilds.length / this.config.rowCount - 1 || this.index === 0) {
+                this.completed = false;
                 this.resizeDivs(this.index, up);
                 this.transOff = Boolean(this.touchDistance) ? this.config.isCircular || this.config.autoplay ? false : this.transOff : this.transOff;
                 this.touchDistance = null;
@@ -492,6 +497,7 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
                             this.touchDistance = null;
                             this.OnSlideEndEmitter.emit(this.getSlideEventsData(<SlideEvent>{}));
                             this.OnChangeDetection.emit();
+                            this.completed = true;
                         }, 10);
                     }, 20);
                 }, 300);
@@ -502,7 +508,6 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
                 this.OnSlideEndEmitter.emit(this.getSlideEventsData(<SlideEvent>{}));
             }
         });
-
     }
 
     private addOrRemoveClass() {
@@ -598,7 +603,7 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
     public calculateTransformValue(index: number): number {
         let i = 0, result = 0;
         while (i < index) {
-            result += Number((<any>this.sliderContainerChilds[i++]).style.width.replace('px',''));
+            result += Number((<any>this.sliderContainerChilds[i++]).style.width.replace('px', ''));
         }
         return result;
 
