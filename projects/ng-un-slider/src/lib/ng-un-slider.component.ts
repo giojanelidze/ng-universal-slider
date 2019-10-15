@@ -33,6 +33,7 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
     @HostBinding('class') get hostClasses(): string { return [this.class, '_cs_slider'].join(' '); }
     @ViewChild('sliderContainer') _sliderContainer: ElementRef;
     public sliderContainerWidth = 0;
+    private childDivsWidth = 0;
     public dataIsReordered = false;
     private _sliderContainerChilds: ElementRef[];
     public get sliderContainerChilds(): ElementRef[] {
@@ -126,7 +127,6 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
         return this._correctTransformValue;
     }
     private _safeTransform = 30;
-
     public get safeTransform(): any {
         if (!this.dataIsReordered) { return; }
         const correctedValueForMoveCount = (this.clientWidth - (this.config.margin ? this.config.margin.size : 0))
@@ -138,6 +138,13 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
         this._safeTransform = Boolean(this.touchDistance)
             ? this.index * width + (this.config.moveCount > 0 ? correctedValueForMoveCount : 0)
             : defaultCalculationTransform;
+
+        // this.transformValue = Boolean(this.touchDistance)
+        //     ? this.touchDistance > 0
+        //         ? this._safeTransform + Math.abs(this.touchDistance)
+        //         : this._safeTransform - Math.abs(this.touchDistance)
+        //     : this._safeTransform * -1;
+        // console.log('this.transformValue ====', this.transformValue);
 
         const transformString: string = Boolean(this.touchDistance)
             ? `translateX(calc(-${this._safeTransform}px${this.touchDistance > 0
@@ -161,6 +168,8 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
     private queue: Queue = new Queue();
     private slider: Slider = new Slider();
 
+    private startTime = 0;
+    private timerInstance;
     private isBrowser: boolean;
     private stopSlider: boolean;
     private touchStartX: number;
@@ -206,6 +215,10 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
         , public el: ElementRef
         , public cdRef: ChangeDetectorRef) {
         this.isBrowser = isPlatformBrowser(this.platformId);
+
+        // setTimeout(() => {
+        //     this.simulateSmoothTranssform(5);
+        // }, 2000);
 
         this.windowResizeStream
             .pipe(debounceTime(200))
@@ -336,7 +349,9 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
                 }
                 if (div.children.length < this.config.cellCount) {
                     const width = this.clientWidth - (this.config.margin ? this.config.margin.size : 0);
-                    div.style.width = `${width * (div.children.length / this.config.cellCount)}px`;
+                    this.childDivsWidth = width * (div.children.length / this.config.cellCount);
+                    div.style.width = `${this.childDivsWidth}px`;
+
                 }
                 this.sliderContainerWidth += Number(String(div.style.width).replace('px', ''));
             }
@@ -347,7 +362,8 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
     private getDivElement() {
         const div = this.renderer.createElement('div');
         div.className = '_cs_slider__container__item';
-        div.style.width = `${this.clientWidth - (this.config.margin ? this.config.margin.size : 0)}px`;
+        this.childDivsWidth = this.clientWidth - (this.config.margin ? this.config.margin.size : 0);
+        div.style.width = `${this.childDivsWidth}px`;
         return div;
     }
 
@@ -467,17 +483,22 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
                 : this.config.isCircular ? this.sliderContainerChilds.length / this.config.rowCount - 2 : this.index;
     }
 
-    
-    private async setIndex(up: boolean) {
-        if (!this.completed) return;
+
+    private async setIndex(up: boolean, index?: number) {
+        if (!this.completed) { return; }
 
         this.queue.execute(async () => {
-            this.touchEvent ? this.calculateIndex(up) : this.changeIndexValue(up);
+            if (!this.touchEvent) {
+                this.changeIndexValue(up);
+            }
+            // this.touchEvent ? this.calculateIndex(up) : this.changeIndexValue(up);
             this.OnChangeDetection.emit();
             if (this.index === this.sliderContainerChilds.length / this.config.rowCount - 1 || this.index === 0) {
                 this.completed = false;
                 this.resizeDivs(this.index, up);
-                this.transOff = Boolean(this.touchDistance) ? this.config.isCircular || this.config.autoplay ? false : this.transOff : this.transOff;
+                this.transOff = Boolean(this.touchDistance) ? this.config.isCircular || this.config.autoplay
+                    ? false
+                    : this.transOff : this.transOff;
                 this.touchDistance = null;
                 // TODO: გადასაკეთებელია async await -ად
                 setTimeout(() => {
@@ -521,6 +542,8 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
     }
 
     public OnTouchStart($event: TouchEvent) {
+        if (this.timerInstance) { clearInterval(this.timerInstance); this.clearTranformData(); return; }
+        this.startTime = performance.now();
         this.touchEvent = true;
         window.clearInterval(this.timeoutId);
         this.transOff = true;
@@ -531,21 +554,28 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
 
     public OnTouchEnd($event: TouchEvent) {
         const touchDistance = $event.changedTouches[0].pageX - this.touchStartX;
-        if (Math.abs(touchDistance) > window.innerWidth * .25) {
-            this.setIndex(Boolean(touchDistance < 0));
+        const speed = this.startTime ? Math.abs(touchDistance / (performance.now() - this.startTime)) : 0;
+        if (speed > 1) {
+            this.simulateSmoothTranssform(Boolean(touchDistance < 0), speed);
         } else {
-            this.transOff = this.config.isCircular || this.config.autoplay ? false : this.transOff;
-            this.touchDistance = null;
+            // if (Math.abs(touchDistance) > window.innerWidth * .25) {
+            //     this.setIndex(Boolean(touchDistance < 0));
+            // } else {
+            //     this.transOff = this.config.isCircular || this.config.autoplay ? false : this.transOff;
+            //     this.touchDistance = null;
+            // }
+            this.clearTranformData();
+            this.stabilizeSliderPosition(Boolean(touchDistance < 0), touchDistance);
         }
         this.OnTouchEndEmitter.emit($event);
         this.OnChangeDetection.emit();
-        this.touchEvent = false;
     }
 
     public OnTouchCancel($event: TouchEvent) {
         this.OnTouchEnd($event);
         this.OnTouchCancelEmitter.emit($event);
         this.touchEvent = false;
+        console.log('OnTouchCancel');
     }
 
     public OnTouchMove($event: TouchEvent) {
@@ -645,6 +675,46 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
     test(num: number, str: string): void {
         console.log('function is called ', num, str);
 
+    }
+
+    simulateSmoothTranssform(up: boolean, speed: number, frictio: number = 0.98) {
+        this.transOff = true;
+        // this.touchDistance = -810;
+        this.changeTransformValue(up, speed, frictio, 0);
+    }
+
+    changeTransformValue(up: boolean, speed: number, frictio: number, index: number) {
+        this.timerInstance = setInterval(() => {
+            if (speed < 0.1) {
+                this.stabilizeSliderPosition(up, this.touchDistance);
+                this.clearTranformData();
+                return;
+            }
+            this.touchDistance = up ? this.touchDistance - speed * 10 : this.touchDistance + speed * 10;
+            speed = index % 3 === 0 ? speed * frictio : speed;
+            this.OnChangeDetection.emit();
+        }, 5);
+    }
+
+    clearTranformData() {
+        clearInterval(this.timerInstance);
+        this.timerInstance = undefined;
+        this.startTime = 0;
+        this.touchEvent = false;
+
+    }
+
+    stabilizeSliderPosition(up: boolean, touchDistance: number) {
+        const style = window.getComputedStyle(this._sliderContainer.nativeElement);
+        const matrix = new WebKitCSSMatrix(style.transform);
+        const value = Math.abs(matrix.m41 / this.childDivsWidth);
+        this.index = up ? Math.ceil(value) : Math.floor(value);
+        if (Math.abs(touchDistance) > window.innerWidth * .25) {
+            this.setIndex(Boolean(touchDistance < 0));
+        } else {
+            this.transOff = this.config.isCircular || this.config.autoplay ? false : this.transOff;
+            this.touchDistance = null;
+        }
     }
 
 }
