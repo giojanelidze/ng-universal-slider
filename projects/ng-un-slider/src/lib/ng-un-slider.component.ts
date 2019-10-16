@@ -158,7 +158,9 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
         return this._index;
     }
     public set index(value: number) {
+        this.previousIndex = this.index;
         if (this.isBrowser) {
+            this.resizeDivs(value, value > this.previousIndex);
             this.SetTimeout();
         }
         this._index = value;
@@ -257,7 +259,7 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
         this._correctTransformValue = undefined;
         this._safeTransform = 0;
         this.instedIndex = 0;
-        this._index = 1;
+        this.index = 1;
         this.previousIndex = 0;
         this.stopSlider = false;
         this.touchStartX = undefined;
@@ -374,28 +376,6 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
                 || (index + (up ? -1 : 1)) === this.sliderContainerChilds.length
                 ? 0 : (index + (up ? -1 : 1));
         if (!this.sliderContainerChilds[index] || !this.sliderContainerChilds[lastIndex]) { return; }
-
-        // switch (this.config.margin.position) {
-        //     case 'both': {
-        //         this.renderer.setStyle(this.sliderContainerChilds[index], 'width', `${this.clientWidth - this.config.margin.size * 2}px`);
-        //         this.renderer.setStyle(this.sliderContainerChilds[lastIndex], 'width', previousElementWidth);
-        //         if (up === false && lastIndex === this.sliderContainerChilds.length - 1) {
-        //             this.renderer.setStyle(this.sliderContainerChilds[0], 'width', previousElementWidth);
-        //         }
-        //         if (index === 1) {
-        //             this.renderer.setStyle(
-        //                 this.sliderContainerChilds[this.sliderContainerChilds.length - 1],
-        //                 'width',
-        //                 previousElementWidth
-        //             );
-        //         }
-        //     } break;
-        //     // case 'none': {
-        //     //     this.renderer.setStyle(this.sliderContainerChilds[index], 'width', `${this.clientWidth}px`);
-        //     // }
-        //     //     break;
-        // }
-
         // TODO: Move in to method
         if (index === 1) {
             this.renderer.removeClass(this.sliderContainerChilds[this.sliderContainerChilds.length - 1], 'active');
@@ -404,6 +384,7 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
                 this.renderer.removeClass(this.sliderContainerChilds[0], 'active');
             }
         }
+        this.renderer.removeClass(this.sliderContainerChilds[this.previousIndex], 'active');
         this.renderer.removeClass(this.sliderContainerChilds[lastIndex], 'active');
         this.renderer.addClass(this.sliderContainerChilds[index], 'active');
     }
@@ -470,7 +451,6 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
     }
 
     private calculateIndex(up: boolean) {
-        this.previousIndex = this.index;
         const condition: boolean = this.config.isCircular
             ? this.index + 1 <= this.sliderContainerChilds.length / this.config.rowCount
             : this.index + 1 < this.sliderContainerChilds.length / this.config.rowCount - 1;
@@ -690,7 +670,23 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
                 this.clearTranformData();
                 return;
             }
-            this.touchDistance = up ? this.touchDistance - speed * 10 : this.touchDistance + speed * 10;
+            const touchDistance = up ? this.touchDistance - speed * 10 : this.touchDistance + speed * 10;
+            const transformValue = this.getTransformvalue();
+
+            if (Math.abs(transformValue) > this.sliderContainerWidth - this.childDivsWidth * 2) {
+                const transval = this.sliderContainerWidth - this.childDivsWidth * 2;
+                this.touchDistance = up ? transval * -1 : transval;
+                this.stabilizeSliderPosition(up, this.touchDistance);
+                this.clearTranformData();
+                return;
+            } else if (transformValue > 0) {
+                this.touchDistance = 0;
+                this.stabilizeSliderPosition(up, this.touchDistance);
+                this.setIndex(up);
+                this.clearTranformData();
+                return;
+            }
+            this.touchDistance = touchDistance;
             speed = index % 3 === 0 ? speed * frictio : speed;
             this.OnChangeDetection.emit();
         }, 5);
@@ -705,9 +701,7 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
     }
 
     stabilizeSliderPosition(up: boolean, touchDistance: number) {
-        const style = window.getComputedStyle(this._sliderContainer.nativeElement);
-        const matrix = new WebKitCSSMatrix(style.transform);
-        const value = Math.abs(matrix.m41 / this.childDivsWidth);
+        const value = Math.abs(this.getTransformvalue() / this.childDivsWidth);
         this.index = up ? Math.ceil(value) : Math.floor(value);
         if (Math.abs(touchDistance) > window.innerWidth * .25) {
             this.setIndex(Boolean(touchDistance < 0));
@@ -715,6 +709,12 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
             this.transOff = this.config.isCircular || this.config.autoplay ? false : this.transOff;
             this.touchDistance = null;
         }
+    }
+
+    getTransformvalue(): number {
+        const style = window.getComputedStyle(this._sliderContainer.nativeElement);
+        const matrix = new WebKitCSSMatrix(style.transform);
+        return matrix.m41;
     }
 
 }
