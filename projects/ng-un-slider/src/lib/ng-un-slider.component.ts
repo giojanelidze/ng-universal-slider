@@ -159,6 +159,8 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
     }
     public set index(value: number) {
         this.previousIndex = this.index;
+        console.log('this.previousIndex =', this.previousIndex);
+
         if (this.isBrowser) {
             this.resizeDivs(value, value > this.previousIndex);
             this.SetTimeout();
@@ -384,7 +386,9 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
                 this.renderer.removeClass(this.sliderContainerChilds[0], 'active');
             }
         }
-        this.renderer.removeClass(this.sliderContainerChilds[this.previousIndex], 'active');
+        if (this.sliderContainerChilds[this.previousIndex]) {
+            this.renderer.removeClass(this.sliderContainerChilds[this.previousIndex], 'active');
+        }
         this.renderer.removeClass(this.sliderContainerChilds[lastIndex], 'active');
         this.renderer.addClass(this.sliderContainerChilds[index], 'active');
     }
@@ -473,7 +477,7 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
             }
             // this.touchEvent ? this.calculateIndex(up) : this.changeIndexValue(up);
             this.OnChangeDetection.emit();
-            if (this.index === this.sliderContainerChilds.length / this.config.rowCount - 1 || this.index === 0) {
+            if (this.index >= this.sliderContainerChilds.length / this.config.rowCount - 1 || this.index === 0) {
                 this.completed = false;
                 this.resizeDivs(this.index, up);
                 this.transOff = Boolean(this.touchDistance) ? this.config.isCircular || this.config.autoplay
@@ -522,6 +526,7 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
     }
 
     public OnTouchStart($event: TouchEvent) {
+        if (!this.completed) { return; }
         if (this.timerInstance) { clearInterval(this.timerInstance); this.clearTranformData(); return; }
         this.startTime = performance.now();
         this.touchEvent = true;
@@ -674,8 +679,8 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
                 const transval = this.sliderContainerWidth - this.childDivsWidth * 2;
                 this.touchDistance = up ? transval * -1 : transval;
                 this.stabilizeSliderPosition(up, this.touchDistance);
-                this.clearTranformData();
                 this.OnChangeDetection.emit();
+                this.clearTranformData();
                 return;
             } else if (transformValue >= 0) {
                 this.touchDistance = 0;
@@ -702,7 +707,8 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
 
     stabilizeSliderPosition(up: boolean, touchDistance: number) {
         const value = Math.abs(this.getTransformvalue() / this.childDivsWidth);
-        this.index = up ? Math.ceil(value) : Math.floor(value);
+        const _index = up ? Math.ceil(value) : Math.floor(value);
+        this.index = _index >= this.sliderContainerChilds.length ? this.sliderContainerChilds.length - 1 : _index;
         if (Math.abs(touchDistance) /*> window.innerWidth * .25*/) {
             this.setIndex(Boolean(touchDistance < 0), this.index);
         } else {
