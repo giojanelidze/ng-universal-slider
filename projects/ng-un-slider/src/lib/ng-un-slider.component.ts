@@ -468,7 +468,7 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
         if (!this.completed) { return; }
 
         this.queue.execute(async () => {
-            if (!this.touchEvent) {
+            if (!this.touchEvent && !index) {
                 this.changeIndexValue(up);
             }
             // this.touchEvent ? this.calculateIndex(up) : this.changeIndexValue(up);
@@ -538,14 +538,8 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
         if (speed > 1) {
             this.simulateSmoothTranssform(Boolean(touchDistance < 0), speed);
         } else {
-            // if (Math.abs(touchDistance) > window.innerWidth * .25) {
-            //     this.setIndex(Boolean(touchDistance < 0));
-            // } else {
-            //     this.transOff = this.config.isCircular || this.config.autoplay ? false : this.transOff;
-            //     this.touchDistance = null;
-            // }
-            this.clearTranformData();
             this.stabilizeSliderPosition(Boolean(touchDistance < 0), touchDistance);
+            this.clearTranformData();
         }
         this.OnTouchEndEmitter.emit($event);
         this.OnChangeDetection.emit();
@@ -667,22 +661,28 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
         this.timerInstance = setInterval(() => {
             if (speed < 0.1) {
                 this.stabilizeSliderPosition(up, this.touchDistance);
+                this.OnChangeDetection.emit();
+                this.setIndex(up, this.index);
                 this.clearTranformData();
+                this.OnChangeDetection.emit();
                 return;
             }
             const touchDistance = up ? this.touchDistance - speed * 10 : this.touchDistance + speed * 10;
             const transformValue = this.getTransformvalue();
 
-            if (Math.abs(transformValue) > this.sliderContainerWidth - this.childDivsWidth * 2) {
+            if (Math.abs(transformValue) >= this.sliderContainerWidth - this.childDivsWidth * 2) {
                 const transval = this.sliderContainerWidth - this.childDivsWidth * 2;
                 this.touchDistance = up ? transval * -1 : transval;
                 this.stabilizeSliderPosition(up, this.touchDistance);
                 this.clearTranformData();
+                this.OnChangeDetection.emit();
                 return;
-            } else if (transformValue > 0) {
+            } else if (transformValue >= 0) {
                 this.touchDistance = 0;
                 this.stabilizeSliderPosition(up, this.touchDistance);
-                this.setIndex(up);
+                this.OnChangeDetection.emit();
+                this.setIndex(up, 1);
+                this.OnChangeDetection.emit();
                 this.clearTranformData();
                 return;
             }
@@ -703,8 +703,8 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
     stabilizeSliderPosition(up: boolean, touchDistance: number) {
         const value = Math.abs(this.getTransformvalue() / this.childDivsWidth);
         this.index = up ? Math.ceil(value) : Math.floor(value);
-        if (Math.abs(touchDistance) > window.innerWidth * .25) {
-            this.setIndex(Boolean(touchDistance < 0));
+        if (Math.abs(touchDistance) /*> window.innerWidth * .25*/) {
+            this.setIndex(Boolean(touchDistance < 0), this.index);
         } else {
             this.transOff = this.config.isCircular || this.config.autoplay ? false : this.transOff;
             this.touchDistance = null;
