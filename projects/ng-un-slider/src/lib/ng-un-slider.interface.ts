@@ -19,6 +19,7 @@ export interface SliderConfigType {
         size: number
     };
     autoplay?: boolean;
+    simulateScroll?: boolean;
     moveCount?: number;
     isCircular?: boolean;
     pagination?: {

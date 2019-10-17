@@ -1,7 +1,8 @@
 import { SliderConfigType } from './ng-un-slider.interface';
 
 export class Slider {
-    public  sliderConfig: SliderConfigType = {
+    public sliderConfig: SliderConfigType = {
+        simulateScroll: false,
         autoplay: true,
         interval: 3000,
         keyboard: true,

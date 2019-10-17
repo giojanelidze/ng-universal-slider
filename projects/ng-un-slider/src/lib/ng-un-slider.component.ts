@@ -16,8 +16,8 @@ import {
     , ViewChild
 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
-import { Subject, Observable } from 'rxjs';
-import { debounceTime, tap } from 'rxjs/operators';
+import { Subject } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
 import { deepMerge } from './merge';
 import { KeyCode, SlideEvent, SliderConfigType } from './ng-un-slider.interface';
 import { Queue } from './queue';
@@ -32,25 +32,21 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
     @Input() class = '';
     @HostBinding('class') get hostClasses(): string { return [this.class, '_cs_slider'].join(' '); }
     @ViewChild('sliderContainer') _sliderContainer: ElementRef;
-    public sliderContainerWidth = 0;
-    private childDivsWidth = 0;
     public dataIsReordered = false;
+    public sliderContainerWidth = 0;
     private _sliderContainerChilds: ElementRef[];
     public get sliderContainerChilds(): ElementRef[] {
         if (!this._sliderContainerChilds) {
             this._sliderContainerChilds = this._sliderContainer && this._sliderContainer.nativeElement
-                ? this._sliderContainer.nativeElement.children
-                : [];
+                ? this._sliderContainer.nativeElement.children : [];
         }
         return this._sliderContainerChilds;
     }
-
-    private completed = true;
-    private up: boolean;
-    private _dataSource: any[];
     public get dataSource(): any[] {
         return this._dataSource;
     }
+
+    private _dataSource: any[];
     // https://nitayneeman.com/posts/listening-to-dom-changes-using-mutationobserver-in-angular/
     @Input()
     public set dataSource(v: any[]) {
@@ -68,13 +64,10 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
             observer.observe(this._sliderContainer.nativeElement, {
                 childList: true
             });
-
         } else {
             this._dataSource = v;
         }
     }
-
-
     @Input()
     public set config(v: SliderConfigType) {
         deepMerge(this.slider.sliderConfig, v);
@@ -127,25 +120,22 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
         }
         return this._correctTransformValue;
     }
+
+
+
+    private up: boolean;
+    private completed = true;
+    private childDivsWidth = 0;
     private _safeTransform = 30;
     public get safeTransform(): any {
         if (!this.dataIsReordered) { return; }
         const correctedValueForMoveCount = (this.clientWidth - (this.config.margin ? this.config.margin.size : 0))
             / this.config.cellCount * this.instedIndex;
-        const width = (<any>this.sliderContainerChilds[this.previousIndex]).clientWidth + this.correctTransformValue;
 
-        const defaultCalculationTransform = this.calculateTransformValue(this.index)
-            + (this.config.moveCount > 0 ? correctedValueForMoveCount : 0) + this.correctTransformValue;
         this._safeTransform = Boolean(this.touchDistance)
-            ? this.index * width + (this.config.moveCount > 0 ? correctedValueForMoveCount : 0)
-            : defaultCalculationTransform;
-
-        // this.transformValue = Boolean(this.touchDistance)
-        //     ? this.touchDistance > 0
-        //         ? this._safeTransform + Math.abs(this.touchDistance)
-        //         : this._safeTransform - Math.abs(this.touchDistance)
-        //     : this._safeTransform * -1;
-        // console.log('this.transformValue ====', this.transformValue);
+            ? this.getWidthFromIndex(this.index) + this.correctTransformValue
+            + (this.config.moveCount > 0 ? correctedValueForMoveCount : 0)
+            : this.defaultCalculationTransform(correctedValueForMoveCount);
 
         const transformString: string = Boolean(this.touchDistance)
             ? `translateX(calc(-${this._safeTransform}px${this.touchDistance > 0
@@ -160,29 +150,29 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
     }
     public set index(value: number) {
         this.previousIndex = this.index;
-        console.log('this.previousIndex =', this.previousIndex);
-
         if (this.isBrowser) {
             this.resizeDivs(value, value > this.previousIndex);
-            this.SetTimeout();
+            if (this.config.autoplay) {
+                this.SetTimeout();
+            }
         }
         this._index = value;
     }
 
     public extendedList: Array<any> = new Array<any>(); transOff = true; showSlider: boolean;
-    private queue: Queue = new Queue();
-    private slider: Slider = new Slider();
 
     private startTime = 0;
     private timerInstance;
+    private lastX: number;
+    private remains: number;
+    private timeoutId?: number;
     private isBrowser: boolean;
+    private touchEvent: boolean;
     private stopSlider: boolean;
     private touchStartX: number;
     private touchDistance: number;
-    private timeoutId?: number;
-    private lastX: number;
-    private remains: number;
-    private touchEvent: boolean;
+    private queue: Queue = new Queue();
+    private slider: Slider = new Slider();
 
     private _bulletCount: Array<number>;
     public get bulletCount(): Array<number> {
@@ -220,11 +210,6 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
         , public el: ElementRef
         , public cdRef: ChangeDetectorRef) {
         this.isBrowser = isPlatformBrowser(this.platformId);
-
-        // setTimeout(() => {
-        //     this.simulateSmoothTranssform(5);
-        // }, 2000);
-
         this.windowResizeStream
             .pipe(debounceTime(200))
             .subscribe(() => {
@@ -266,13 +251,19 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
         this.previousIndex = 0;
         this.stopSlider = false;
         this.touchStartX = undefined;
-        this.touchDistance = undefined;
+        this.touchDistance = 0;
         this.timeoutId = null;
         this.lastX = 0;
         this.remains = 0;
         this.touchEvent = false;
         this._bulletCount = undefined;
         this.itemDivCount = undefined;
+    }
+
+    public defaultCalculationTransform(correctedValueForMoveCount: number): number {
+        return this.calculateTransformValue(this.index) + (this.config.moveCount > 0
+            ? correctedValueForMoveCount
+            : 0) + this.correctTransformValue;
     }
 
     modifyDataSource(): void {
@@ -314,7 +305,7 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
         this.createDivContainers();
         this.resizeDivs(1, true);
         this.dataIsReordered = true;
-        setTimeout(() => this.transOff = this.config.isCircular || this.config.autoplay ? false : this.transOff, 500);
+        setTimeout(() => this.transOff = false, 500);
     }
 
     @HostListener('keyup', ['$event'])
@@ -374,8 +365,7 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
 
     private resizeDivs(index: number, up: boolean) {
 
-        const previousElementWidth = `${this.clientWidth - (this.config.margin ? this.config.margin.size : 0)}px`,
-            lastIndex = (index + (up ? -1 : 1)) < 0
+        const lastIndex = (index + (up ? -1 : 1)) < 0
                 || (index + (up ? -1 : 1)) === this.sliderContainerChilds.length
                 ? 0 : (index + (up ? -1 : 1));
         if (!this.sliderContainerChilds[index] || !this.sliderContainerChilds[lastIndex]) { return; }
@@ -484,7 +474,7 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
                 this.transOff = Boolean(this.touchDistance) ? this.config.isCircular || this.config.autoplay
                     ? false
                     : this.transOff : this.transOff;
-                this.touchDistance = null;
+                this.touchDistance = 0;
                 // TODO: გადასაკეთებელია async await -ად
                 setTimeout(() => {
                     this.transOff = true;
@@ -494,13 +484,18 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
                         if (_index === this.sliderContainerChilds.length - 2) {
                             this.resizeDivs(this.sliderContainerChilds.length - 1, up);
                         }
-                        this.index = this.index === 0 ? this.sliderContainerChilds.length / this.config.rowCount - 2 : 1;
+                        this.index = this.index === 0
+                            ? this.sliderContainerChilds.length / this.config.rowCount - 2
+                            : this.config.isCircular
+                                ? 1
+                                : this.index;
                         this.resizeDivs(this.index, up);
                         this.OnChangeDetection.emit();
                         setTimeout(() => {
-                            this.transOff = this.config.isCircular || this.config.autoplay ? false : this.transOff;
+                            this.transOff = false;
+                            // this.transOff = this.config.isCircular || this.config.autoplay ? false : this.transOff;
                             this.resizeDivs(this.index, up);
-                            this.touchDistance = null;
+                            this.touchDistance = 0;
                             this.OnSlideEndEmitter.emit(this.getSlideEventsData(<SlideEvent>{}));
                             this.OnChangeDetection.emit();
                             this.completed = true;
@@ -509,8 +504,8 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
                 }, 300);
             } else {
                 this.resizeDivs(this.index, up);
-                this.transOff = this.config.isCircular || this.config.autoplay ? false : this.transOff;
-                this.touchDistance = null;
+                this.transOff = false;
+                this.touchDistance = 0;
                 this.OnSlideEndEmitter.emit(this.getSlideEventsData(<SlideEvent>{}));
             }
         });
@@ -527,13 +522,12 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
     }
 
     public OnTouchStart($event: TouchEvent) {
-        if (!this.completed) { return; }
         if (this.timerInstance) {
-            window.cancelAnimationFrame(this.timerInstance);
-            this.stabilizeSliderPosition(this.up, Math.abs(this.getTransformvalue()));
+            cancelAnimationFrame(this.timerInstance);
+            this.completed = true;
             this.clearTranformData();
-            return;
         }
+        if (!this.completed) { return; }
         this.startTime = performance.now();
         this.touchEvent = true;
         window.clearInterval(this.timeoutId);
@@ -544,15 +538,18 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
     }
 
     public OnTouchEnd($event: TouchEvent) {
+        this.transOff = false;
         const touchDistance = $event.changedTouches[0].pageX - this.touchStartX;
+        if (Math.abs(touchDistance) < 16) { return; }
         const speed = this.startTime ? Math.abs(touchDistance / (performance.now() - this.startTime)) : 0;
         this.up = Boolean(touchDistance < 0);
-        if (speed > 1) {
+        if (this.config.simulateScroll && speed > 0.8) {
             this.simulateSmoothTranssform(this.up, speed);
         } else {
             this.stabilizeSliderPosition(this.up, touchDistance);
             this.clearTranformData();
         }
+        this.lastX = 0;
         this.OnTouchEndEmitter.emit($event);
         this.OnChangeDetection.emit();
     }
@@ -561,16 +558,24 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
         this.OnTouchEnd($event);
         this.OnTouchCancelEmitter.emit($event);
         this.touchEvent = false;
-        console.log('OnTouchCancel');
+        this.lastX = 0;
     }
 
     public OnTouchMove($event: TouchEvent) {
-        this.lastX = $event.touches[0].pageX;
+
         if (Math.abs(this.touchStartX - this.lastX) > 16) {
             (<Event>$event).stopPropagation();
             (<Event>$event).preventDefault();
         }
-        this.touchDistance = $event.touches[0].pageX - this.touchStartX;
+        const touchDistance = this.touchDistance
+            ? this.touchDistance + $event.touches[0].pageX - this.lastX
+            : $event.touches[0].pageX - this.touchStartX;
+        if (!this.config.isCircular && ((touchDistance < 0 && this.index === this.sliderContainerChilds.length - 2))
+            || (touchDistance > 0 && this.index === 1)) {
+            return;
+        }
+        this.touchDistance = touchDistance;
+        this.lastX = $event.touches[0].pageX;
         this.OnTouchMoveEmitter.emit($event);
     }
 
@@ -657,23 +662,18 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
         return (vertInView && horInView);
     }
 
-
-    test(num: number, str: string): void {
-        console.log('function is called ', num, str);
-
-    }
-
     simulateSmoothTranssform(up: boolean, speed: number, frictio: number = 0.98) {
         this.transOff = true;
-        // this.touchDistance = -810;
         this.changeTransformValue(up, speed, frictio, 0);
     }
 
     changeTransformValue(up: boolean, speed: number, frictio: number, index: number) {
         window.cancelAnimationFrame(this.timerInstance);
-        const value = Math.abs(this.getTransformvalue() / this.childDivsWidth);
-        if (speed < 0.1 && this.getTransformvalue() <= Math.round(value) * this.childDivsWidth) {
-            // if(value === _index * this.childDivsWidth)
+        const transformValue = this.getTransformvalue();
+        const absTransformValue = Math.abs(transformValue);
+
+        const value = (absTransformValue + this.childDivsWidth - (<any>this.sliderContainerChilds[0]).clientWidth) / this.childDivsWidth;
+        if (speed < 0.1 && transformValue <= Math.round(value) * this.childDivsWidth) {
             this.stabilizeSliderPosition(up, this.touchDistance);
             this.OnChangeDetection.emit();
             this.setIndex(up, this.index);
@@ -682,11 +682,10 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
             return;
         }
         const touchDistance = up ? this.touchDistance - speed * 30 : this.touchDistance + speed * 30;
-        const transformValue = this.getTransformvalue();
 
-        if (Math.abs(transformValue) >= this.sliderContainerWidth - this.childDivsWidth * 2) {
+        if (absTransformValue >= this.sliderContainerWidth - this.childDivsWidth * 2) {
             const transval = this.sliderContainerWidth - this.childDivsWidth * 2;
-            this.touchDistance = up ? transval * -1 : transval;
+            this.touchDistance = up ? -transval : transval;
             this.stabilizeSliderPosition(up, this.touchDistance);
             this.OnChangeDetection.emit();
             this.clearTranformData();
@@ -704,29 +703,34 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
         speed = index % 3 === 0 && speed > 0.1 ? speed * frictio : speed;
         this.OnChangeDetection.emit();
 
-        this.timerInstance = window.requestAnimationFrame(() => {
+        this.timerInstance = requestAnimationFrame(() => {
             this.changeTransformValue.apply(this, [up, speed, frictio, index]);
         });
     }
 
     clearTranformData() {
-        clearInterval(this.timerInstance);
-        this.timerInstance = undefined;
+        if (this.timerInstance) {
+            cancelAnimationFrame(this.timerInstance);
+            this.timerInstance = undefined;
+        }
         this.startTime = 0;
         this.touchEvent = false;
 
     }
 
     stabilizeSliderPosition(up: boolean, touchDistance: number) {
-        const value = Math.abs(this.getTransformvalue() / this.childDivsWidth);
+        const value = (Math.abs(this.getTransformvalue())
+            + this.childDivsWidth - (<any>this.sliderContainerChilds[0]).clientWidth) / this.childDivsWidth;
         // const _index = up ? Math.ceil(value) : Math.floor(value);
         const _index = Math.round(value);
-        this.index = _index >= this.sliderContainerChilds.length ? this.sliderContainerChilds.length - 1 : _index;
-        if (Math.abs(touchDistance) /*> window.innerWidth * .25*/) {
+        this.index = _index >= this.sliderContainerChilds.length
+            ? this.config.isCircular ? this.sliderContainerChilds.length - 1 : this.sliderContainerChilds.length - 2
+            : _index === 0 ? this.config.isCircular ? _index : 1 : _index;
+        if (Math.abs(touchDistance)) {
             this.setIndex(Boolean(touchDistance < 0), this.index);
         } else {
             this.transOff = this.config.isCircular || this.config.autoplay ? false : this.transOff;
-            this.touchDistance = null;
+            this.touchDistance = 0;
         }
     }
 
@@ -735,6 +739,16 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
         const matrix = new WebKitCSSMatrix(style.transform);
         return matrix.m41;
     }
+
+    getWidthFromIndex(index: number) {
+        let width = 0;
+        let i = 0;
+        while (i < index) {
+            width += (<any>this.sliderContainerChilds[i++]).clientWidth;
+        }
+        return width;
+    }
+
 }
 
 
