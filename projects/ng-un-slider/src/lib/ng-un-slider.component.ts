@@ -113,7 +113,7 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
                     this._correctTransformValue = -this.config.margin.size;
                     break;
                 case 'both':
-                    this._correctTransformValue = 0;
+                    this._correctTransformValue = -this.config.margin.size;
                     break;
                 default:
                     this._correctTransformValue = 0 /*this.index !== 1 ? -(this.config.margin ? this.config.margin.size : 0) : 0*/;
@@ -346,7 +346,9 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
                     if (existingItemsCount > 0) { this.renderer.appendChild(div, this.sliderContainerChilds[0]); }
                 }
                 if (div.children.length < this.config.cellCount) {
-                    const width = this.clientWidth - (this.config.margin ? this.config.margin.size : 0);
+                    const width = this.clientWidth - (this.config.margin
+                        ? this.config.margin.position === 'both' ? this.config.margin.size * 2 : this.config.margin.size
+                        : 0);
                     this.childDivsWidth = width * (div.children.length / this.config.cellCount);
                     div.style.width = `${this.childDivsWidth}px`;
 
@@ -362,7 +364,9 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
         div.className = this.slider.sliderConfig.containerClass.priority === 'concat'
             ? `_cs_slider__container__item ${this.slider.sliderConfig.containerClass.class}`
             : this.slider.sliderConfig.containerClass.class;
-        this.childDivsWidth = this.clientWidth - (this.config.margin ? this.config.margin.size : 0);
+        this.childDivsWidth = this.clientWidth - (this.config.margin
+            ? this.config.margin.position === 'both' ? this.config.margin.size * 2 : this.config.margin.size
+            : 0);
         div.style.width = `${this.childDivsWidth}px`;
         return div;
     }
