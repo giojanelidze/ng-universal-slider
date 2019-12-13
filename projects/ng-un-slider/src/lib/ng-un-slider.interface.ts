@@ -14,6 +14,7 @@ export interface SliderConfigType {
      * If set to "hover", pauses the cycling of the carousel on mouseenter and resumes the cycling of the carousel on mouseleave.
      */
     pause?: 'hover' | boolean;
+    hostClassPriority?: 'concat' | 'absolute';
     margin?: {
         position: 'left' | 'right' | 'both' | 'none',
         size: number

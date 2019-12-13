@@ -1,10 +1,10 @@
 <div class="_css_container">
   <ng-un-slider *ngIf="dataSource?.length"
-              class="_css_margin--top-md"
               [dataSource]="dataSource" 
               [config]="rSliderConfig"
               (outputDataSource)="outputdataSource = $event;"
               (onChangeDetection)="OnChangeDetection()"
+              [class]="'_css_margin--top-md'"
               #slider>
       <ng-container header>
           <span class="_css_carousel__header">

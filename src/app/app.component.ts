@@ -16,6 +16,7 @@ export class AppComponent implements AfterViewInit, OnInit {
   rSliderConfig: SliderConfigType = {
     // interval: 1000,
     cellCount: 3,
+    hostClassPriority: 'concat',
     isCircular: true,
     autoplay: false,
     keyboard: true,
@@ -84,7 +85,27 @@ export class AppComponent implements AfterViewInit, OnInit {
         src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
       }, {
         src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
-      },{
+      }, {
+        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
+      }, {
+        src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
+      }, {
+        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
+      }, {
+        src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
+      }, {
+        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
+      }, {
+        src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
+      }, {
+        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
+      }, {
+        src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
+      }, {
+        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
+      }, {
+        src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
+      }, {
         src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
       }, {
         src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
@@ -108,7 +129,27 @@ export class AppComponent implements AfterViewInit, OnInit {
         src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
       }, {
         src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
-      },{
+      }, {
+        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
+      }, {
+        src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
+      }, {
+        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
+      }, {
+        src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
+      }, {
+        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
+      }, {
+        src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
+      }, {
+        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
+      }, {
+        src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
+      }, {
+        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
+      }, {
+        src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
+      }, {
         src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
       }, {
         src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
@@ -132,7 +173,27 @@ export class AppComponent implements AfterViewInit, OnInit {
         src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
       }, {
         src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
-      },{
+      }, {
+        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
+      }, {
+        src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
+      }, {
+        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
+      }, {
+        src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
+      }, {
+        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
+      }, {
+        src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
+      }, {
+        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
+      }, {
+        src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
+      }, {
+        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
+      }, {
+        src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
+      }, {
         src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
       }, {
         src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
@@ -156,7 +217,27 @@ export class AppComponent implements AfterViewInit, OnInit {
         src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
       }, {
         src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
-      },{
+      }, {
+        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
+      }, {
+        src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
+      }, {
+        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
+      }, {
+        src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
+      }, {
+        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
+      }, {
+        src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
+      }, {
+        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
+      }, {
+        src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
+      }, {
+        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
+      }, {
+        src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
+      }, {
         src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
       }, {
         src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
@@ -180,7 +261,27 @@ export class AppComponent implements AfterViewInit, OnInit {
         src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
       }, {
         src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
-      },{
+      }, {
+        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
+      }, {
+        src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
+      }, {
+        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
+      }, {
+        src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
+      }, {
+        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
+      }, {
+        src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
+      }, {
+        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
+      }, {
+        src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
+      }, {
+        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
+      }, {
+        src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
+      }, {
         src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
       }, {
         src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
@@ -204,10 +305,6 @@ export class AppComponent implements AfterViewInit, OnInit {
         src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
       }, {
         src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
-      },{
-        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
-      }, {
-        src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
       }, {
         src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
       }, {
@@ -228,103 +325,7 @@ export class AppComponent implements AfterViewInit, OnInit {
         src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
       }, {
         src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
-      },{
-        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
       }, {
-        src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
-      }, {
-        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
-      }, {
-        src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
-      }, {
-        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
-      }, {
-        src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
-      }, {
-        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
-      }, {
-        src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
-      }, {
-        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
-      }, {
-        src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
-      }, {
-        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
-      }, {
-        src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
-      },{
-        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
-      }, {
-        src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
-      }, {
-        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
-      }, {
-        src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
-      }, {
-        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
-      }, {
-        src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
-      }, {
-        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
-      }, {
-        src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
-      }, {
-        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
-      }, {
-        src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
-      }, {
-        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
-      }, {
-        src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
-      },{
-        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
-      }, {
-        src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
-      }, {
-        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
-      }, {
-        src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
-      }, {
-        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
-      }, {
-        src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
-      }, {
-        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
-      }, {
-        src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
-      }, {
-        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
-      }, {
-        src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
-      }, {
-        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
-      }, {
-        src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
-      },{
-        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
-      }, {
-        src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
-      }, {
-        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
-      }, {
-        src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
-      }, {
-        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
-      }, {
-        src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
-      }, {
-        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
-      }, {
-        src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
-      }, {
-        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
-      }, {
-        src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
-      }, {
-        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
-      }, {
-        src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
-      },{
         src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
       }, {
         src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'

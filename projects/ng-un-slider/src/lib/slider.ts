@@ -7,6 +7,7 @@ export class Slider {
         interval: 3000,
         keyboard: true,
         rowCount: 1,
+        hostClassPriority: 'concat',
         margin: {
             position: 'none',
             size: 0

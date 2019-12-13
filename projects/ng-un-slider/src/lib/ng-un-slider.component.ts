@@ -30,7 +30,9 @@ import { Slider } from './slider';
 })
 export class NgUnSliderComponent implements OnInit, AfterViewInit {
     @Input() class = '';
-    @HostBinding('class') get hostClasses(): string { return [this.class, '_cs_slider'].join(' '); }
+    @HostBinding('class') get hostClasses(): string {
+        return [this.class, this.config.hostClassPriority === 'concat' ? '_cs_slider' : ''].join(' ');
+    }
     @ViewChild('sliderContainer') _sliderContainer: ElementRef;
     public dataIsReordered = false;
     public sliderContainerWidth = 0;
@@ -366,8 +368,8 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
     private resizeDivs(index: number, up: boolean) {
 
         const lastIndex = (index + (up ? -1 : 1)) < 0
-                || (index + (up ? -1 : 1)) === this.sliderContainerChilds.length
-                ? 0 : (index + (up ? -1 : 1));
+            || (index + (up ? -1 : 1)) === this.sliderContainerChilds.length
+            ? 0 : (index + (up ? -1 : 1));
         if (!this.sliderContainerChilds[index] || !this.sliderContainerChilds[lastIndex]) { return; }
         // TODO: Move in to method
         if (index === 1) {
@@ -507,6 +509,7 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
                 this.transOff = false;
                 this.touchDistance = 0;
                 this.OnSlideEndEmitter.emit(this.getSlideEventsData(<SlideEvent>{}));
+                this.OnChangeDetection.emit();
             }
         });
     }
