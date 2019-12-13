@@ -359,7 +359,9 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
 
     private getDivElement() {
         const div = this.renderer.createElement('div');
-        div.className = '_cs_slider__container__item';
+        div.className = this.slider.sliderConfig.containerClass.priority === 'concat'
+            ? `_cs_slider__container__item ${this.slider.sliderConfig.containerClass.class}`
+            : this.slider.sliderConfig.containerClass.class;
         this.childDivsWidth = this.clientWidth - (this.config.margin ? this.config.margin.size : 0);
         div.style.width = `${this.childDivsWidth}px`;
         return div;
@@ -601,11 +603,13 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
     }
 
     public forward(up: boolean) {
+        this.touchEvent = false;
         this.OnSlideStartEmitter.emit(this.getSlideEventsData(<SlideEvent>{ moveTo: 'forward' }));
         this.setIndex(up);
     }
 
     public back(up: boolean) {
+        this.touchEvent = false;
         this.OnSlideStartEmitter.emit(this.getSlideEventsData(<SlideEvent>{ moveTo: 'back' }));
         this.setIndex(up);
     }

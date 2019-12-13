@@ -8,6 +8,10 @@ export class Slider {
         keyboard: true,
         rowCount: 1,
         hostClassPriority: 'concat',
+        containerClass: {
+            priority: 'concat',
+            class: ''
+        },
         margin: {
             position: 'none',
             size: 0

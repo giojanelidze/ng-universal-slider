@@ -15,6 +15,10 @@ export interface SliderConfigType {
      */
     pause?: 'hover' | boolean;
     hostClassPriority?: 'concat' | 'absolute';
+    containerClass?: {
+        priority?: 'concat' | 'absolute'
+        class?: string;
+    };
     margin?: {
         position: 'left' | 'right' | 'both' | 'none',
         size: number
