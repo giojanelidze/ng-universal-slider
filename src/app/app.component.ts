@@ -15,7 +15,7 @@ export class AppComponent implements AfterViewInit, OnInit {
 
   rSliderConfig: SliderConfigType = {
     // interval: 1000,
-    cellCount: 3,
+    cellCount: 2,
     hostClassPriority: 'concat',
     isCircular: true,
     autoplay: false,

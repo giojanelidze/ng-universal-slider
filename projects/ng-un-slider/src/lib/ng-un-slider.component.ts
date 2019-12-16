@@ -555,7 +555,7 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
         if (this.config.simulateScroll && speed > 0.8) {
             this.simulateSmoothTranssform(this.up, speed);
         } else {
-            this.stabilizeSliderPosition(this.up, touchDistance);
+            this.stabilizeSliderPosition(this.up, touchDistance, speed);
             this.clearTranformData();
         }
         this.lastX = 0;
@@ -685,6 +685,7 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
 
         const value = (absTransformValue + this.childDivsWidth - (<any>this.sliderContainerChilds[0]).clientWidth) / this.childDivsWidth;
         if (speed < 0.1 && transformValue <= Math.round(value) * this.childDivsWidth) {
+            speed = 0;
             this.stabilizeSliderPosition(up, this.touchDistance);
             this.OnChangeDetection.emit();
             this.setIndex(up, this.index);
@@ -729,11 +730,11 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
 
     }
 
-    stabilizeSliderPosition(up: boolean, touchDistance: number) {
+    stabilizeSliderPosition(up: boolean, touchDistance: number, speed?: number) {
         const value = (Math.abs(this.getTransformvalue())
             + this.childDivsWidth - (<any>this.sliderContainerChilds[0]).clientWidth) / this.childDivsWidth;
-        // const _index = up ? Math.ceil(value) : Math.floor(value);
-        const _index = Math.round(value);
+        speed = speed > 1 ? 1 : speed;
+        const _index = Math.round(speed ? 1 * speed + value : value);
         this.index = _index >= this.sliderContainerChilds.length
             ? this.config.isCircular ? this.sliderContainerChilds.length - 1 : this.sliderContainerChilds.length - 2
             : _index === 0 ? this.config.isCircular ? _index : 1 : _index;
