@@ -730,11 +730,11 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
 
     }
 
-    stabilizeSliderPosition(up: boolean, touchDistance: number, speed?: number) {
+    stabilizeSliderPosition(up: boolean, touchDistance: number, speed: number = 0) {
         const value = (Math.abs(this.getTransformvalue())
             + this.childDivsWidth - (<any>this.sliderContainerChilds[0]).clientWidth) / this.childDivsWidth;
         speed = speed > 1 ? 1 : speed;
-        const _index = Math.round(speed ? 1 * speed + value : value);
+        const _index = Math.round(value + (up ? 1 * speed : -1 * speed));
         this.index = _index >= this.sliderContainerChilds.length
             ? this.config.isCircular ? this.sliderContainerChilds.length - 1 : this.sliderContainerChilds.length - 2
             : _index === 0 ? this.config.isCircular ? _index : 1 : _index;
