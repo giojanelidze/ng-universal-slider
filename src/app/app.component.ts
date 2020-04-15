@@ -17,10 +17,9 @@ export class AppComponent implements AfterViewInit, OnInit {
     // interval: 1000,
     cellCount: 2,
     hostClassPriority: 'concat',
-    isCircular: true,
+    isCircular: false,
     autoplay: false,
-    keyboard: true,
-    // margin: { position: 'right', size: 50 },
+    simulateScroll: true,
     pagination: {
       show: false
     },

@@ -33,7 +33,7 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
     @HostBinding('class') get hostClasses(): string {
         return [this.class, this.config.hostClassPriority === 'concat' ? '_cs_slider' : ''].join(' ');
     }
-    @ViewChild('sliderContainer') _sliderContainer: ElementRef;
+    @ViewChild('sliderContainer', { static: true }) _sliderContainer: ElementRef;
     public dataIsReordered = false;
     public sliderContainerWidth = 0;
     private _sliderContainerChilds: ElementRef[];
