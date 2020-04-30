@@ -635,10 +635,10 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
     public calculateTransformValue(index: number): number {
         let i = 0, result = 0;
         while (i < index) {
-            if (!(<any>this.sliderContainerChilds[i + 1])) {
-                continue;
+            const element: any = this.sliderContainerChilds[i++];
+            if (element) {
+                result += Number(element.style.width.replace('px', ''));
             }
-            result += Number((<any>this.sliderContainerChilds[i++]).style.width.replace('px', ''));
         }
         return result;
 
