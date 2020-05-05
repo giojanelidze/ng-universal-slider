@@ -1,4 +1,3 @@
-import { isPlatformBrowser } from '@angular/common';
 import {
     AfterViewInit
     , ChangeDetectorRef
@@ -9,78 +8,33 @@ import {
     , HostListener
     , Inject
     , Input
-    , OnInit
+    , OnChanges
     , Output
     , PLATFORM_ID
     , Renderer2
-    , ViewChild
+    , SimpleChanges
 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { Subject } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
-import { deepMerge } from './merge';
-import { KeyCode, SlideEvent, SliderConfigType } from './ng-un-slider.interface';
+import { DomManipulatorComponent } from './dom-manipulator/dom-manipulator.component';
+import { KeyCode, SlideEvent } from './ng-un-slider.interface';
 import { Queue } from './queue';
-import { Slider } from './slider';
 @Component({
     // tslint:disable-next-line:component-selector
     selector: 'ng-un-slider',
     templateUrl: './ng-un-slider.component.html',
     styleUrls: ['./ng-un-slider.component.scss']
 })
-export class NgUnSliderComponent implements OnInit, AfterViewInit {
+export class NgUnSliderComponent extends DomManipulatorComponent implements AfterViewInit, OnChanges {
     @Input() class = '';
     @HostBinding('class') get hostClasses(): string {
         return [this.class, this.config.hostClassPriority === 'concat' ? '_cs_slider' : ''].join(' ');
     }
-    @ViewChild('sliderContainer', { static: true }) _sliderContainer: ElementRef;
     public dataIsReordered = false;
-    public sliderContainerWidth = 0;
-    private _sliderContainerChilds: ElementRef[];
-    public get sliderContainerChilds(): ElementRef[] {
-        if (!this._sliderContainerChilds) {
-            this._sliderContainerChilds = this._sliderContainer && this._sliderContainer.nativeElement
-                ? this._sliderContainer.nativeElement.children : [];
-        }
-        return this._sliderContainerChilds;
-    }
-    public get dataSource(): any[] {
-        return this._dataSource;
-    }
 
-    private _dataSource: any[];
     // https://nitayneeman.com/posts/listening-to-dom-changes-using-mutationobserver-in-angular/
-    @Input()
-    public set dataSource(v: any[]) {
-        if (this._dataSource) {
-            this.initializeDefaultValues();
-            this.removeDivContainers();
-            this._dataSource = v;
-            this.modifyDataSource();
-            this.transOff = true;
-            const observer = new MutationObserver((mutations) => {
-                this.onDataSourceChange();
-                this.OnChangeDetection.emit();
-                observer.disconnect();
-            });
-            observer.observe(this._sliderContainer.nativeElement, {
-                childList: true
-            });
-        } else {
-            this._dataSource = v;
-        }
-    }
-    @Input()
-    public set config(v: SliderConfigType) {
-        deepMerge(this.slider.sliderConfig, v);
-        if (this.slider.sliderConfig.margin && this.slider.sliderConfig.margin.position === 'none'
-            && this.slider.sliderConfig.margin.size) {
-            this.slider.sliderConfig.margin.size = 0;
-        }
-    }
-    public get config(): SliderConfigType {
-        return this.slider.sliderConfig;
-    }
+    @Input() public dataSource: any[];
 
     @Output() public outputDataSource: EventEmitter<any[]> = new EventEmitter<any[]>();
     // tslint:disable-next-line:no-output-rename
@@ -102,9 +56,6 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
     // tslint:disable-next-line:no-output-rename
     @Output('onChangeDetection') public OnChangeDetection: EventEmitter<any> = new EventEmitter<any>();
 
-    public get clientWidth(): number {
-        return this.el && this.el.nativeElement ? (this.el.nativeElement as Element).clientWidth : 0;
-    }
     private _correctTransformValue: number;
     public get correctTransformValue(): number {
         if (!this._correctTransformValue) {
@@ -123,11 +74,8 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
         return this._correctTransformValue;
     }
 
-
-
     private up: boolean;
     private completed = true;
-    private childDivsWidth = 0;
     private _safeTransform = 30;
     public get safeTransform(): any {
         if (!this.dataIsReordered) { return; }
@@ -161,27 +109,26 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
         this._index = value;
     }
 
-    public extendedList: Array<any> = new Array<any>(); transOff = true; showSlider: boolean;
+    public transOff = true;
 
     private startTime = 0;
     private timerInstance;
     private lastX: number;
-    private remains: number;
     private timeoutId?: number;
-    private isBrowser: boolean;
     private touchEvent: boolean;
     private stopSlider: boolean;
     private touchStartX: number;
     private touchDistance: number;
     private queue: Queue = new Queue();
-    private slider: Slider = new Slider();
 
     private _bulletCount: Array<number>;
     public get bulletCount(): Array<number> {
         if (!this._bulletCount) {
             this._bulletCount = [];
             if (this.isBrowser) {
-                const count = this.dataSource && this.dataSource.length ? Math.ceil(this.dataSource.length / this.config.cellCount) : 0;
+                const count = this.dataSource && this.dataSource.length
+                    ? Math.ceil(this.dataSource.length / this.config.cellCount)
+                    : 0;
                 for (let index = 0; index < count; index++) {
                     this._bulletCount.push(index);
                 }
@@ -190,28 +137,16 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
         return this._bulletCount;
     }
 
-    private get sliderConteinersDivCount(): Array<number> {
-        const countArray = [];
-        if (this.isBrowser) {
-            const count = this.dataSource && this.dataSource.length
-                ? Math.ceil(this.dataSource.length / this.config.cellCount) + 2
-                : 0;
-            for (let index = 0; index < count; index++) {
-                countArray.push(index);
-            }
-        }
-        return countArray;
-    }
-    public itemDivCount: number;
     private windowResizeStream: Subject<any> = new Subject<any>();
     private addOrRemoveClass$: Subject<any> = new Subject<any>();
 
-    constructor(@Inject(PLATFORM_ID) private platformId: string
+    constructor(@Inject(PLATFORM_ID) public platformId: string
         , private sanitizer: DomSanitizer
-        , private renderer: Renderer2
+        , public renderer: Renderer2
         , public el: ElementRef
         , public cdRef: ChangeDetectorRef) {
-        this.isBrowser = isPlatformBrowser(this.platformId);
+        super(platformId, renderer, el);
+
         this.windowResizeStream
             .pipe(debounceTime(200))
             .subscribe(() => {
@@ -243,9 +178,7 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
 
     private initializeDefaultValues() {
         this.class = '';
-        this.sliderContainerWidth = 0;
         this.dataIsReordered = false;
-        this._sliderContainerChilds = undefined;
         this._correctTransformValue = undefined;
         this._safeTransform = 0;
         this.instedIndex = 0;
@@ -256,10 +189,9 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
         this.touchDistance = 0;
         this.timeoutId = null;
         this.lastX = 0;
-        this.remains = 0;
         this.touchEvent = false;
         this._bulletCount = undefined;
-        this.itemDivCount = undefined;
+        this.resetConfiguration();
     }
 
     public defaultCalculationTransform(correctedValueForMoveCount: number): number {
@@ -285,8 +217,7 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
 
         tmpExtendedList.push(...tmpExtendedList.slice(cutedData, cutedData + this.config.cellCount));
 
-        this.extendedList = tmpExtendedList;
-        this.outputDataSource.emit(this.extendedList);
+        this.outputDataSource.emit(tmpExtendedList);
         if (this.isBrowser && this.config.autoplay) {
             this.SetTimeout();
         } else {
@@ -295,8 +226,24 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
         }
     }
 
-    ngOnInit(): void {
-        this.modifyDataSource();
+    ngOnChanges(changes: SimpleChanges): void {
+        if (changes.dataSource) {
+            if (changes.dataSource.previousValue) {
+                this.initializeDefaultValues();
+                this.removeDivContainers();
+                this.transOff = true;
+                const observer = new MutationObserver((mutations) => {
+                    this.onDataSourceChange();
+                    this.OnChangeDetection.emit();
+                    observer.disconnect();
+                });
+                observer.observe(this._sliderContainer.nativeElement, {
+                    childList: true
+                });
+            }
+            this.elementLength = changes.dataSource.currentValue.length;
+            this.modifyDataSource();
+        }
     }
 
     ngAfterViewInit() {
@@ -312,84 +259,15 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
 
     @HostListener('keyup', ['$event'])
     onKeyUp(event: KeyboardEvent) {
-        if (!this.config.keyboard || (event.keyCode !== KeyCode.right && event.keyCode !== KeyCode.left)) { return; }
+        if (!this.config.keyboard || (event.keyCode !== KeyCode.right && event.keyCode !== KeyCode.left)) {
+            return;
+        }
         this.setIndex(event.keyCode === KeyCode.right ? true : false);
     }
 
     @HostListener('window:resize', ['$event'])
     onResize(event: any) {
         this.windowResizeStream.next(true);
-    }
-
-    private removeDivContainers() {
-        while (this.sliderContainerChilds.length) {
-            if (this.sliderContainerChilds.hasOwnProperty(0)) {
-                const element = this.sliderContainerChilds[0];
-                this.renderer.removeChild(this._sliderContainer.nativeElement, element);
-            }
-        }
-    }
-
-    private createDivContainers() {
-        if (this.isBrowser) {
-            if (!this.itemDivCount) {
-                this.itemDivCount = this.sliderConteinersDivCount.length;
-            }
-            for (let divIndex = 0; divIndex < this.itemDivCount; divIndex++) {
-                const div = this.getDivElement();
-                this.renderer.appendChild(this._sliderContainer.nativeElement, div);
-                for (let cellIndex = 0; cellIndex < this.config.cellCount; cellIndex++) {
-                    if (divIndex === 0 && this.remains > 0 && cellIndex >= this.remains) { continue; }
-                    const existingItemsCount = this.sliderContainerChilds.length - (divIndex + 1);
-                    if (this.remains > 0 && existingItemsCount === this.config.cellCount
-                        && divIndex !== this.itemDivCount - 1) { break; }
-                    if (existingItemsCount > 0) { this.renderer.appendChild(div, this.sliderContainerChilds[0]); }
-                }
-                if (div.children.length < this.config.cellCount) {
-                    const width = this.clientWidth - (this.config.margin
-                        ? this.config.margin.position === 'both' ? this.config.margin.size * 2 : this.config.margin.size
-                        : 0);
-                    this.childDivsWidth = width * (div.children.length / this.config.cellCount);
-                    div.style.width = `${this.childDivsWidth}px`;
-
-                }
-                this.sliderContainerWidth += Number(String(div.style.width).replace('px', ''));
-            }
-            this.showSlider = true;
-        }
-    }
-
-    private getDivElement() {
-        const div = this.renderer.createElement('div');
-        div.className = this.slider.sliderConfig.containerClass.priority === 'concat'
-            ? `_cs_slider__container__item ${this.slider.sliderConfig.containerClass.class}`
-            : this.slider.sliderConfig.containerClass.class;
-        this.childDivsWidth = this.clientWidth - (this.config.margin
-            ? this.config.margin.position === 'both' ? this.config.margin.size * 2 : this.config.margin.size
-            : 0);
-        div.style.width = `${this.childDivsWidth}px`;
-        return div;
-    }
-
-    private resizeDivs(index: number, up: boolean) {
-
-        const lastIndex = (index + (up ? -1 : 1)) < 0
-            || (index + (up ? -1 : 1)) === this.sliderContainerChilds.length
-            ? 0 : (index + (up ? -1 : 1));
-        if (!this.sliderContainerChilds[index] || !this.sliderContainerChilds[lastIndex]) { return; }
-        // TODO: Move in to method
-        if (index === 1) {
-            this.renderer.removeClass(this.sliderContainerChilds[this.sliderContainerChilds.length - 1], 'active');
-        } else {
-            if (lastIndex === this.sliderContainerChilds.length - 1) {
-                this.renderer.removeClass(this.sliderContainerChilds[0], 'active');
-            }
-        }
-        if (this.sliderContainerChilds[this.previousIndex]) {
-            this.renderer.removeClass(this.sliderContainerChilds[this.previousIndex], 'active');
-        }
-        this.renderer.removeClass(this.sliderContainerChilds[lastIndex], 'active');
-        this.renderer.addClass(this.sliderContainerChilds[index], 'active');
     }
 
     private addVisibleClass(element: any) {
@@ -415,15 +293,6 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
             }
         }
     }
-
-    private addActiveClass(element: any) {
-        if (this.isAnyPartOfElementInViewport(element)) {
-            this.renderer.addClass(element, 'active');
-        } else {
-            this.renderer.removeClass(element, 'active');
-        }
-    }
-
 
     private SetTimeout() {
         window.clearInterval(this.timeoutId);
@@ -644,16 +513,6 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
 
     }
 
-    // private isOutOfViewport(elem: HTMLElement) {
-    //     const bounding = elem.getBoundingClientRect();
-    //     // Check if it's out of the viewport on each side
-    //     const top = bounding.top < 0;
-    //     const left = bounding.left < 0;
-    //     const bottom = bounding.bottom > (window.innerHeight || document.documentElement.clientHeight);
-    //     const right = bounding.right > (window.innerWidth || document.documentElement.clientWidth);
-    //     const any = top || left || bottom || right;
-    //     return any;
-    // }
     elementInViewport(el: any) {
         const rect = el.getBoundingClientRect();
         return (
@@ -663,6 +522,7 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
             rect.right <= (window.innerWidth || document.documentElement.clientWidth)
         );
     }
+
     isAnyPartOfElementInViewport(el: any) {
         const rect = el.getBoundingClientRect();
         // DOMRect { x: 8, y: 8, width: 100, height: 100, top: 8, right: 108, bottom: 108, left: 8 }
@@ -689,9 +549,11 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
         const value = (absTransformValue + this.childDivsWidth - (<any>this.sliderContainerChilds[0]).clientWidth) / this.childDivsWidth;
         if (speed < 0.1 && transformValue <= Math.round(value) * this.childDivsWidth) {
             speed = 0;
-            this.stabilizeSliderPosition(up, this.touchDistance);
+            if (this.config.stabilization) {
+                this.stabilizeSliderPosition(up, this.touchDistance);
+            }
             this.OnChangeDetection.emit();
-            this.setIndex(up, this.index);
+            // this.setIndex(up, this.index);
             this.clearTranformData();
             this.OnChangeDetection.emit();
             return;
@@ -741,6 +603,8 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
         this.index = _index >= this.sliderContainerChilds.length
             ? this.config.isCircular ? this.sliderContainerChilds.length - 1 : this.sliderContainerChilds.length - 2
             : _index === 0 ? this.config.isCircular ? _index : 1 : _index;
+        console.log('index =', this.index);
+
         if (Math.abs(touchDistance)) {
             this.setIndex(Boolean(touchDistance < 0), this.index);
         } else {
@@ -765,8 +629,3 @@ export class NgUnSliderComponent implements OnInit, AfterViewInit {
     }
 
 }
-
-
-
-
-

@@ -41,6 +41,7 @@ export interface SliderConfigType {
     cellCount?: number;
     // autoCalculateCellCount?: boolean;
     rowCount?: number;
+    stabilization?: boolean;
 }
 
 export interface ArrowType {
