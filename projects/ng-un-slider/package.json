@@ -1,6 +1,6 @@
 {
   "name": "ng-un-slider",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "peerDependencies": {
     "@angular/common": "^7.2.15",
     "@angular/core": "^7.2.15"
