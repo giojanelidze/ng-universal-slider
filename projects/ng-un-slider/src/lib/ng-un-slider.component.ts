@@ -85,7 +85,9 @@ export class NgUnSliderComponent extends DomManipulatorComponent implements Afte
         this._safeTransform = Boolean(this.touchDistance)
             ? this.getWidthFromIndex(this.index) + this.correctTransformValue
             + (this.config.moveCount > 0 ? correctedValueForMoveCount : 0)
-            : this.defaultCalculationTransform(correctedValueForMoveCount);
+            : this.config.stabilization ?
+                this.defaultCalculationTransform(correctedValueForMoveCount)
+                : Math.abs(this.getTransformvalue());
 
         const transformString: string = Boolean(this.touchDistance)
             ? `translateX(calc(-${this._safeTransform}px${this.touchDistance > 0
@@ -549,9 +551,9 @@ export class NgUnSliderComponent extends DomManipulatorComponent implements Afte
         const value = (absTransformValue + this.childDivsWidth - (<any>this.sliderContainerChilds[0]).clientWidth) / this.childDivsWidth;
         if (speed < 0.1 && transformValue <= Math.round(value) * this.childDivsWidth) {
             speed = 0;
-            if (this.config.stabilization) {
-                this.stabilizeSliderPosition(up, this.touchDistance);
-            }
+            // if (this.config.stabilization) {
+            this.stabilizeSliderPosition(up, this.touchDistance);
+            // }
             this.OnChangeDetection.emit();
             // this.setIndex(up, this.index);
             this.clearTranformData();
