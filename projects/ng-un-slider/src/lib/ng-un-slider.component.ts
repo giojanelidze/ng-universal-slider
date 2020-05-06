@@ -73,7 +73,7 @@ export class NgUnSliderComponent extends DomManipulatorComponent implements Afte
         }
         return this._correctTransformValue;
     }
-
+    private lastEvent: 'touch' | 'click';
     private up: boolean;
     private completed = true;
     private _safeTransform = 30;
@@ -85,7 +85,7 @@ export class NgUnSliderComponent extends DomManipulatorComponent implements Afte
         this._safeTransform = Boolean(this.touchDistance)
             ? this.getWidthFromIndex(this.index) + this.correctTransformValue
             + (this.config.moveCount > 0 ? correctedValueForMoveCount : 0)
-            : this.config.stabilization ?
+            : this.config.stabilization || this.lastEvent === 'click' ?
                 this.defaultCalculationTransform(correctedValueForMoveCount)
                 : Math.abs(this.getTransformvalue());
 
@@ -402,6 +402,7 @@ export class NgUnSliderComponent extends DomManipulatorComponent implements Afte
     }
 
     public OnTouchStart($event: TouchEvent) {
+        this.lastEvent = 'touch';
         if (this.timerInstance) {
             cancelAnimationFrame(this.timerInstance);
             this.completed = true;
@@ -479,12 +480,14 @@ export class NgUnSliderComponent extends DomManipulatorComponent implements Afte
 
     public forward(up: boolean) {
         this.touchEvent = false;
+        this.lastEvent = 'click';
         this.OnSlideStartEmitter.emit(this.getSlideEventsData(<SlideEvent>{ moveTo: 'forward' }));
         this.setIndex(up);
     }
 
     public back(up: boolean) {
         this.touchEvent = false;
+        this.lastEvent = 'click';
         this.OnSlideStartEmitter.emit(this.getSlideEventsData(<SlideEvent>{ moveTo: 'back' }));
         this.setIndex(up);
     }
