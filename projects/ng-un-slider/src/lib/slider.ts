@@ -38,6 +38,10 @@ export class Slider {
             hostClass: '_cs_slider__pagination',
             bulletClass: '_cs_slider__pagination-bullet'
         },
-        cellCount: 1
+        cellCount: 1,
+        speed: {
+            min: 0.1,
+            max: 0.2
+        }
     };
 }

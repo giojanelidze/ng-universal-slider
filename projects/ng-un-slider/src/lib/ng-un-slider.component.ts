@@ -428,7 +428,7 @@ export class NgUnSliderComponent extends DomManipulatorComponent implements Afte
         if (Math.abs(touchDistance) < 16) { return; }
         const speed = this.startTime ? Math.abs(touchDistance / (performance.now() - this.startTime)) : 0;
         this.up = Boolean(touchDistance < 0);
-        if (this.config.simulateScroll && speed > 0.8) {
+        if (this.config.simulateScroll && speed > this.config.speed.max) {
             this.simulateSmoothTranssform(this.up, speed);
         } else {
             this.stabilizeSliderPosition(this.up, touchDistance, speed);
@@ -438,7 +438,7 @@ export class NgUnSliderComponent extends DomManipulatorComponent implements Afte
         this.OnTouchEndEmitter.emit($event);
         this.OnChangeDetection.emit();
 
-        if (speed < 0.8) {
+        if (speed < this.config.speed.max) {
             this.deviation = Math.abs(this.getTransformvalue()) - Math.abs(this.getWidthFromIndex(this.index));
             console.log(`გადახრა =`, this.deviation);
 
@@ -563,7 +563,7 @@ export class NgUnSliderComponent extends DomManipulatorComponent implements Afte
         const absTransformValue = Math.abs(transformValue);
 
         const value = (absTransformValue + this.childDivsWidth - (<any>this.sliderContainerChilds[0]).clientWidth) / this.childDivsWidth;
-        if (speed < 0.1 && transformValue <= Math.round(value) * this.childDivsWidth) {
+        if (speed < this.config.speed.min && transformValue <= Math.round(value) * this.childDivsWidth) {
             speed = 0;
             // if (this.config.stabilization) {
             this.stabilizeSliderPosition(up, this.touchDistance);
@@ -573,11 +573,9 @@ export class NgUnSliderComponent extends DomManipulatorComponent implements Afte
             this.clearTranformData();
             this.OnChangeDetection.emit();
 
-            if (speed < 0.8) {
-                this.deviation = Math.abs(this.getTransformvalue()) - Math.abs(this.getWidthFromIndex(this.index));
-                console.log(`გადახრა =`, this.deviation);
+            this.deviation = Math.abs(this.getTransformvalue()) - Math.abs(this.getWidthFromIndex(this.index));
+            console.log(`გადახრა =`, this.deviation);
 
-            }
             return;
         }
         const touchDistance = up ? this.touchDistance - speed * 30 : this.touchDistance + speed * 30;

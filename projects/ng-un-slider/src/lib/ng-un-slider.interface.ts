@@ -42,6 +42,10 @@ export interface SliderConfigType {
     // autoCalculateCellCount?: boolean;
     rowCount?: number;
     stabilization?: boolean;
+    speed?: {
+        min: number
+        max: number
+    };
 }
 
 export interface ArrowType {
