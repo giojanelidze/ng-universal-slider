@@ -73,21 +73,24 @@ export class NgUnSliderComponent extends DomManipulatorComponent implements Afte
         }
         return this._correctTransformValue;
     }
-    private lastEvent: 'touch' | 'click';
+
     private up: boolean;
     private completed = true;
     private _safeTransform = 30;
+    private startTransform = 0;
+    private deviation = 0;
     public get safeTransform(): any {
         if (!this.dataIsReordered) { return; }
-        const correctedValueForMoveCount = (this.clientWidth - (this.config.margin ? this.config.margin.size : 0))
-            / this.config.cellCount * this.instedIndex;
+        let correctedValueForMoveCount = 0;
+        if (this.config.moveCount > 0) {
+            correctedValueForMoveCount = (this.clientWidth - (this.config.margin ? this.config.margin.size : 0))
+                / this.config.cellCount * this.instedIndex;
+        }
 
         this._safeTransform = Boolean(this.touchDistance)
-            ? this.getWidthFromIndex(this.index) + this.correctTransformValue
-            + (this.config.moveCount > 0 ? correctedValueForMoveCount : 0)
-            : this.config.stabilization || this.lastEvent === 'click' ?
-                this.defaultCalculationTransform(correctedValueForMoveCount)
-                : Math.abs(this.getTransformvalue());
+            ? this.startTransform + this.correctTransformValue + correctedValueForMoveCount
+            : this.defaultCalculationTransform(correctedValueForMoveCount) + this.deviation;
+
 
         const transformString: string = Boolean(this.touchDistance)
             ? `translateX(calc(-${this._safeTransform}px${this.touchDistance > 0
@@ -378,6 +381,7 @@ export class NgUnSliderComponent extends DomManipulatorComponent implements Afte
                             this.OnSlideEndEmitter.emit(this.getSlideEventsData(<SlideEvent>{}));
                             this.OnChangeDetection.emit();
                             this.completed = true;
+                            // this.startTransform = this.getWidthFromIndex(this.index);
                         }, 10);
                     }, 20);
                 }, 300);
@@ -402,11 +406,10 @@ export class NgUnSliderComponent extends DomManipulatorComponent implements Afte
     }
 
     public OnTouchStart($event: TouchEvent) {
-        this.lastEvent = 'touch';
+        this.startTransform = Math.abs(this.getTransformvalue());
         if (this.timerInstance) {
-            cancelAnimationFrame(this.timerInstance);
             this.completed = true;
-            this.clearTranformData();
+            this.simulateSmoothTranssform(this.up, 0);
         }
         if (!this.completed) { return; }
         this.startTime = performance.now();
@@ -417,6 +420,7 @@ export class NgUnSliderComponent extends DomManipulatorComponent implements Afte
         this.OnTouchStartEmitter.emit($event);
         this.OnSlideStartEmitter.emit(this.getSlideEventsData(<SlideEvent>{ moveTo: 'undefined' }));
     }
+
 
     public OnTouchEnd($event: TouchEvent) {
         this.transOff = false;
@@ -433,6 +437,13 @@ export class NgUnSliderComponent extends DomManipulatorComponent implements Afte
         this.lastX = 0;
         this.OnTouchEndEmitter.emit($event);
         this.OnChangeDetection.emit();
+
+        if (speed < 0.8) {
+            this.deviation = Math.abs(this.getTransformvalue()) - Math.abs(this.getWidthFromIndex(this.index));
+            console.log(`გადახრა =`, this.deviation);
+
+        }
+
     }
 
     public OnTouchCancel($event: TouchEvent) {
@@ -480,14 +491,14 @@ export class NgUnSliderComponent extends DomManipulatorComponent implements Afte
 
     public forward(up: boolean) {
         this.touchEvent = false;
-        this.lastEvent = 'click';
+        this.deviation = 0;
         this.OnSlideStartEmitter.emit(this.getSlideEventsData(<SlideEvent>{ moveTo: 'forward' }));
         this.setIndex(up);
     }
 
     public back(up: boolean) {
         this.touchEvent = false;
-        this.lastEvent = 'click';
+        this.deviation = 0;
         this.OnSlideStartEmitter.emit(this.getSlideEventsData(<SlideEvent>{ moveTo: 'back' }));
         this.setIndex(up);
     }
@@ -561,6 +572,12 @@ export class NgUnSliderComponent extends DomManipulatorComponent implements Afte
             // this.setIndex(up, this.index);
             this.clearTranformData();
             this.OnChangeDetection.emit();
+
+            if (speed < 0.8) {
+                this.deviation = Math.abs(this.getTransformvalue()) - Math.abs(this.getWidthFromIndex(this.index));
+                console.log(`გადახრა =`, this.deviation);
+
+            }
             return;
         }
         const touchDistance = up ? this.touchDistance - speed * 30 : this.touchDistance + speed * 30;
