@@ -3,7 +3,7 @@ import { SliderConfigType } from './ng-un-slider.interface';
 export class Slider {
     public sliderConfig: SliderConfigType = {
         /**@deprecated Don't use this property */
-        stabilization: false,
+        stabilization: true,
         simulateScroll: false,
         autoplay: true,
         interval: 3000,
