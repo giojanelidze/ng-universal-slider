@@ -438,7 +438,7 @@ export class NgUnSliderComponent extends DomManipulatorComponent implements Afte
         this.OnTouchEndEmitter.emit($event);
         this.OnChangeDetection.emit();
 
-        if (speed < this.config.speed.max) {
+        if (speed < this.config.speed.max && !this.config.stabilization) {
             this.deviation = Math.abs(this.getTransformvalue()) - Math.abs(this.getWidthFromIndex(this.index));
             console.log(`გადახრა =`, this.deviation);
 
@@ -462,8 +462,8 @@ export class NgUnSliderComponent extends DomManipulatorComponent implements Afte
         const touchDistance = this.touchDistance
             ? this.touchDistance + $event.touches[0].pageX - this.lastX
             : $event.touches[0].pageX - this.touchStartX;
-        if (!this.config.isCircular && ((touchDistance < 0 && this.index === this.sliderContainerChilds.length - 2))
-            || (touchDistance > 0 && this.index === 1)) {
+        if (!this.config.isCircular && (((touchDistance < 0 && this.index === this.sliderContainerChilds.length - 2))
+            || (touchDistance > 0 && this.index === 1))) {
             return;
         }
         this.touchDistance = touchDistance;
@@ -572,15 +572,15 @@ export class NgUnSliderComponent extends DomManipulatorComponent implements Afte
             // this.setIndex(up, this.index);
             this.clearTranformData();
             this.OnChangeDetection.emit();
-
-            this.deviation = Math.abs(this.getTransformvalue()) - Math.abs(this.getWidthFromIndex(this.index));
+            if (!this.config.stabilization) {
+                this.deviation = Math.abs(this.getTransformvalue()) - Math.abs(this.getWidthFromIndex(this.index));
+            }
             console.log(`გადახრა =`, this.deviation);
-
             return;
         }
         const touchDistance = up ? this.touchDistance - speed * 30 : this.touchDistance + speed * 30;
 
-        if (absTransformValue >= this.sliderContainerWidth - this.childDivsWidth * 2) {
+        if (absTransformValue >= this.sliderContainerWidth - this.childDivsWidth) {
             const transval = this.sliderContainerWidth - this.childDivsWidth * 2;
             this.touchDistance = up ? -transval : transval;
             this.stabilizeSliderPosition(up, this.touchDistance);
