@@ -409,6 +409,10 @@ export class NgUnSliderComponent extends DomManipulatorComponent implements Afte
         this.startTransform = Math.abs(this.getTransformvalue());
         if (this.timerInstance) {
             this.completed = true;
+            if (!this.config.stabilization) {
+                this.deviation = Math.abs(this.getTransformvalue()) - Math.abs(this.getWidthFromIndex(this.index));
+                console.log(`გადახრა =`, this.deviation);
+            }
             this.simulateSmoothTranssform(this.up, 0);
         }
         if (!this.completed) { return; }
@@ -616,8 +620,11 @@ export class NgUnSliderComponent extends DomManipulatorComponent implements Afte
     }
 
     stabilizeSliderPosition(up: boolean, touchDistance: number, speed: number = 0) {
-        const value = (Math.abs(this.getTransformvalue())
-            + this.childDivsWidth - (<any>this.sliderContainerChilds[0]).clientWidth) / this.childDivsWidth;
+         const transValue = this.getTransformvalue();
+        const value = transValue >= 0
+            ? 0
+            : ((Math.abs(transValue)
+                + this.childDivsWidth - (<any>this.sliderContainerChilds[0]).clientWidth) / this.childDivsWidth);
         speed = speed > 1 ? 1 : speed;
         const _index = Math.round(value + (up ? 1 * speed : -1 * speed));
         this.index = _index >= this.sliderContainerChilds.length
