@@ -7,7 +7,7 @@ import { DomManipulatorComponent } from './dom-manipulator/dom-manipulator.compo
 
 @NgModule({
   declarations: [NgUnSliderComponent, DomManipulatorComponent],
-  imports: [CommonModule, RouterModule, BrowserModule],
+  imports: [CommonModule, RouterModule],
   schemas: [
     NO_ERRORS_SCHEMA
   ],
