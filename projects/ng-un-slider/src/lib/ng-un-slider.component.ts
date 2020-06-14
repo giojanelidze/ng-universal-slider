@@ -379,6 +379,7 @@ export class NgUnSliderComponent extends DomManipulatorComponent implements Afte
                             this.resizeDivs(this.index, up);
                             this.touchDistance = 0;
                             this.OnSlideEndEmitter.emit(this.getSlideEventsData(<SlideEvent>{}));
+                            window.dispatchEvent(new Event('sliderTransformChanged'));
                             this.OnChangeDetection.emit();
                             this.completed = true;
                             // this.startTransform = this.getWidthFromIndex(this.index);
@@ -390,6 +391,7 @@ export class NgUnSliderComponent extends DomManipulatorComponent implements Afte
                 this.transOff = false;
                 this.touchDistance = 0;
                 this.OnSlideEndEmitter.emit(this.getSlideEventsData(<SlideEvent>{}));
+                window.dispatchEvent(new Event('sliderTransformChanged'));
                 this.OnChangeDetection.emit();
             }
         });
@@ -620,14 +622,14 @@ export class NgUnSliderComponent extends DomManipulatorComponent implements Afte
     }
 
     stabilizeSliderPosition(up: boolean, touchDistance: number, speed: number = 0) {
-         const transValue = this.getTransformvalue();
+        const transValue = this.getTransformvalue();
         const value = transValue >= 0
             ? 0
             : ((Math.abs(transValue)
                 + this.childDivsWidth - (<any>this.sliderContainerChilds[0]).clientWidth) / this.childDivsWidth);
         speed = speed > 1 ? 1 : speed;
         const _index = Math.round(value + (up ? 1 * speed : -1 * speed));
-        this.index = _index >= this.sliderContainerChilds.length
+        this.index = _index >= this.sliderContainerChilds.length - 1
             ? this.config.isCircular ? this.sliderContainerChilds.length - 1 : this.sliderContainerChilds.length - 2
             : _index === 0 ? this.config.isCircular ? _index : 1 : _index;
         console.log('index =', this.index);

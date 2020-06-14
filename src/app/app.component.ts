@@ -61,8 +61,6 @@ export class AppComponent implements AfterViewInit, OnInit {
       this.rSliderConfig = Object.assign(this.rSliderConfig,
         { isCircular: isCircular, autoplay: false });
       this.dataSource = [{
-        src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
-      }, {
         src: 'https://s4827.pcdn.co/wp-content/uploads/2018/03/black_iPad_wallpapers_6_thumb.jpg'
       }, {
         src: 'https://pbs.twimg.com/profile_images/598236288869748736/OWzRETXp_400x400.jpg'
