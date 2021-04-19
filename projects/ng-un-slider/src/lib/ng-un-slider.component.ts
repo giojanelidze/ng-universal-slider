@@ -628,7 +628,9 @@ export class NgUnSliderComponent extends DomManipulatorComponent implements Afte
             : ((Math.abs(transValue)
                 + this.childDivsWidth - (<any>this.sliderContainerChilds[0]).clientWidth) / this.childDivsWidth);
         speed = speed > 1 ? 1 : speed;
-        const _index = Math.round(value + (up ? 1 * speed : -1 * speed));
+        
+        const val: number = value + (up ? 1 * speed : -1 * speed);
+        const _index = up ? Math.floor(val) : Math.ceil(val);
         this.index = _index >= this.sliderContainerChilds.length - 1
             ? this.config.isCircular ? this.sliderContainerChilds.length - 1 : this.sliderContainerChilds.length - 2
             : _index === 0 ? this.config.isCircular ? _index : 1 : _index;
